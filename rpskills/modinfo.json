@@ -3,10 +3,11 @@
     "modid": "rpskills",
     "name": "rpskills",
     "authors": [
-        "Unknown"
+        "RSparling",
+        "ChristJohnson"
     ],
     "description": "To be added",
-    "version": "1.0.0",
+    "version": "0.0.0",
     "dependencies": {
         "game": ""
     }
