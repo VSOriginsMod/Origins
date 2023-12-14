@@ -112,6 +112,7 @@ namespace rpskills
 
         }
 
+        // FIXME(chris): I think this can be removed eventually?
         [HarmonyPostfix]
         [HarmonyPatch(typeof(EntityPlayer), "EntityPlayer")]
         public static void EntityPlayerInit(EntityPlayer __instance) {
