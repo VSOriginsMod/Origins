@@ -1,0 +1,47 @@
+[
+    {
+        "name": "combatant",
+        "level": 0,
+        "attributes": {}
+    },
+    {
+        "name": "farmer",
+        "level": 0,
+        "attributes": {}
+    },
+    {
+        "name": "homekeeper",
+        "level": 0,
+        "attributes": {}
+    },
+    {
+        "name": "hunter",
+        "level": 0,
+        "attributes": {}
+    },
+    {
+        "name": "miner",
+        "level": 0,
+        "attributes": {}
+    },
+    {
+        "name": "processer",
+        "level": 0,
+        "attributes": {}
+    },
+    {
+        "name": "rancher",
+        "level": 0,
+        "attributes": {}
+    },
+    {
+        "name": "smith",
+        "level": 0,
+        "attributes": {}
+    },
+    {
+        "name": "woodsman",
+        "level": 0,
+        "attributes": {}
+    }
+]
