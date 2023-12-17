@@ -138,11 +138,13 @@ namespace rpskills
         public override void StartClientSide(ICoreClientAPI api)
         {
             this.capi = api;
-<<<<<<< Updated upstream
-            _ = api.Network.GetChannel("heritageselection").SetMessageHandler<HeritageSelectedState>(new NetworkServerMessageHandler<HeritageSelectedState>(this.onSelectedState));
-=======
-            api.Network.GetChannel("heritageselection").SetMessageHandler<HeritageSelectedState>(new NetworkServerMessageHandler<HeritageSelectedState>(this.onSelectedState));
->>>>>>> Stashed changes
+
+            // tell client how to handle server sending heritage information
+            api.Network
+                .GetChannel("heritageselection")
+                .SetMessageHandler<HeritageSelectedState>(
+                    new NetworkServerMessageHandler<HeritageSelectedState>(this.onSelectedState)
+                );
 
             // WARN(chris): uncommenting may suck
             // api.Event.IsPlayerReady += this.Event_IsPlayerReady;
@@ -150,13 +152,8 @@ namespace rpskills
 
             // FEAT(chris): primary functionality of the branch
             api.Event.BlockTexturesLoaded += this.loadCharacterHeritages;
-<<<<<<< Updated upstream
-            this.charDlg = api.Gui.LoadedGuis.Find((GuiDialog dlg) => dlg is GuiDialogCharacterBase) as GuiDialogCharacterBase;
-            this.charDlg.Tabs.RemoveAll((GuiTab tab) => tab.Name.Equals(Vintagestory.API.Config.Lang.Get("charactertab-traits", Array.Empty<object>())));
-=======
             // this.charDlg = api.Gui.LoadedGuis.Find((GuiDialog dlg) => dlg is GuiDialogCharacterBase) as GuiDialogCharacterBase;
             // this.charDlg.Tabs.RemoveAll((GuiTab tab) => tab.Name.Equals(Vintagestory.API.Config.Lang.Get("charactertab-traits", Array.Empty<object>())));
->>>>>>> Stashed changes
         }
 
 
@@ -184,11 +181,7 @@ namespace rpskills
             this.sapi = api;
 
             // WARN(chris): uncommenting may suck
-<<<<<<< Updated upstream
-            _ = api.Network.GetChannel("heritageselection")
-=======
             api.Network.GetChannel("heritageselection")
->>>>>>> Stashed changes
                 .SetMessageHandler<HeritageSelectionPacket>(
                     new NetworkClientMessageHandler<HeritageSelectionPacket>(
                         this.onHeritageSelection
@@ -241,7 +234,7 @@ namespace rpskills
 
         public void Event_PlayerJoinServer(IServerPlayer byPlayer)
         {
-            throw new NotImplementedException("Hello!");
+            api.Logger.Event("A wind stirs");
         }
 
 
@@ -255,7 +248,7 @@ namespace rpskills
         public override void Dispose()
         {
             base.Dispose();
-            harmony.UnpatchAll(MOD_NAME);
+            // harmony.UnpatchAll(MOD_NAME);
         }
 
     }
