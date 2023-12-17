@@ -2,46 +2,154 @@
     {
         "name": "combatant",
         "level": 0,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
         "attributes": {}
+=======
+        "paths": [
+            "default"
+        ]
+>>>>>>> Stashed changes
+=======
+        "paths": [
+            "default"
+        ]
+>>>>>>> Stashed changes
     },
     {
         "name": "farmer",
         "level": 0,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
         "attributes": {}
+=======
+        "paths": [
+            "default"
+        ]
+>>>>>>> Stashed changes
+=======
+        "paths": [
+            "default"
+        ]
+>>>>>>> Stashed changes
     },
     {
         "name": "homekeeper",
         "level": 0,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
         "attributes": {}
+=======
+        "paths": [
+            "default"
+        ]
+>>>>>>> Stashed changes
+=======
+        "paths": [
+            "default"
+        ]
+>>>>>>> Stashed changes
     },
     {
         "name": "hunter",
         "level": 0,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
         "attributes": {}
+=======
+        "paths": [
+            "default"
+        ]
+>>>>>>> Stashed changes
+=======
+        "paths": [
+            "default"
+        ]
+>>>>>>> Stashed changes
     },
     {
         "name": "miner",
         "level": 0,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
         "attributes": {}
+=======
+        "paths": [
+            "default"
+        ]
+>>>>>>> Stashed changes
+=======
+        "paths": [
+            "default"
+        ]
+>>>>>>> Stashed changes
     },
     {
         "name": "processer",
         "level": 0,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
         "attributes": {}
+=======
+        "paths": [
+            "default"
+        ]
+>>>>>>> Stashed changes
+=======
+        "paths": [
+            "default"
+        ]
+>>>>>>> Stashed changes
     },
     {
         "name": "rancher",
         "level": 0,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
         "attributes": {}
+=======
+        "paths": [
+            "default"
+        ]
+>>>>>>> Stashed changes
+=======
+        "paths": [
+            "default"
+        ]
+>>>>>>> Stashed changes
     },
     {
         "name": "smith",
         "level": 0,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
         "attributes": {}
+=======
+        "paths": [
+            "default"
+        ]
+>>>>>>> Stashed changes
+=======
+        "paths": [
+            "default"
+        ]
+>>>>>>> Stashed changes
     },
     {
         "name": "woodsman",
         "level": 0,
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
         "attributes": {}
+=======
+        "paths": [
+            "default"
+        ]
+>>>>>>> Stashed changes
+=======
+        "paths": [
+            "default"
+        ]
+>>>>>>> Stashed changes
     }
 ]

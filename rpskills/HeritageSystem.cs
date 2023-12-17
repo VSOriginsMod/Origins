@@ -21,8 +21,8 @@ namespace rpskills
     /// <summary>
     /// ModSystem is the base for any VintageStory code mods.
     /// </summary>
-    /// HarmonyPatch is required for any class that patches
-    [HarmonyPatch]
+    // /// HarmonyPatch is required for any class that patches
+    // [HarmonyPatch]
     public class HeritageSystem : ModSystem
     {
 
@@ -104,7 +104,6 @@ namespace rpskills
             this.api = api;
 
             harmony = new Harmony(MOD_NAME);
-            harmony.PatchAll();
 
             api.Network.RegisterChannel("heritageselection")
                 .RegisterMessageType<HeritageSelectionPacket>()
