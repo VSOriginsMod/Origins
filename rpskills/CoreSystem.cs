@@ -54,7 +54,6 @@ namespace rpskills
 
 
 
-        
         bool didSelect;
 
         /// <summary>
@@ -157,9 +156,9 @@ namespace rpskills
                         this.onSelectedState
                 ));
 
-            api.Event.IsPlayerReady += this.Event_IsPlayerReady;
-            // TODO(chris): implement GUI in Event_PlayerJoin
-            api.Event.PlayerJoin += this.Event_PlayerJoin;
+            // WARN(chris): uncommenting may suck
+            // api.Event.IsPlayerReady += this.Event_IsPlayerReady;
+            // api.Event.PlayerJoin += this.Event_PlayerJoin;
 
             // FEAT(chris): primary functionality of the branch
             api.Event.BlockTexturesLoaded += this.loadCharacterHeritages;
@@ -255,7 +254,7 @@ namespace rpskills
 
             }
             // TODO(chris): mark all changed WatchedAttributes as dirty
-            
+
             fromPlayer.BroadcastPlayerData(true);
         }
 
@@ -320,13 +319,17 @@ namespace rpskills
             // WARN(chris): these are default values, use the Gui to get
             //              player-chosen values to put here.
             // tell the server what the player selected
+            didSelect = true;
             capi.Network
                 .GetChannel(CHANNEL_CORE_RPSKILLS)
-                .SendPacket<HeritageSelectionPacket>(
-                    new HeritageSelectionPacket(
-                        didSelect,
-                        "average"
-                    )
+                .SendPacket<HeritageSelectionPacket>
+                (
+                    new HeritageSelectionPacket
+                    {
+                        DidSelect = didSelect,
+                        HeritageName = "average"
+
+                    }
                 );
             capi.Network.SendPlayerNowReady();
 
