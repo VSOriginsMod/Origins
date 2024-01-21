@@ -157,8 +157,8 @@ namespace rpskills
                 ));
 
             // WARN(chris): uncommenting may suck
-            // api.Event.IsPlayerReady += this.Event_IsPlayerReady;
-            // api.Event.PlayerJoin += this.Event_PlayerJoin;
+            api.Event.IsPlayerReady += this.Event_IsPlayerReady;
+            api.Event.PlayerJoin += this.Event_PlayerJoin;
 
             // FEAT(chris): primary functionality of the branch
             api.Event.BlockTexturesLoaded += this.loadCharacterHeritages;
@@ -229,9 +229,11 @@ namespace rpskills
             );
 
             if (didSelectBefore) {
-                capi.ShowChatMessage("you've already chosen a heritage");
+                api.Logger.Warning("you've already chosen a heritage");
                 return;
             }
+
+            api.Logger.Debug("successfully chosen " + packet.HeritageName);
 
             if(packet.DidSelect) {
                 fromPlayer.SetModdata(
@@ -320,16 +322,15 @@ namespace rpskills
             //              player-chosen values to put here.
             // tell the server what the player selected
             didSelect = true;
+            HeritageSelectionPacket p = new HeritageSelectionPacket {
+                DidSelect = didSelect,
+                HeritageName = this.HeritagesByName["average"].Name,
+            };
             capi.Network
                 .GetChannel(CHANNEL_CORE_RPSKILLS)
                 .SendPacket<HeritageSelectionPacket>
                 (
-                    new HeritageSelectionPacket
-                    {
-                        DidSelect = didSelect,
-                        HeritageName = "average"
-
-                    }
+                    p
                 );
             capi.Network.SendPlayerNowReady();
 
@@ -384,5 +385,10 @@ namespace rpskills
             // harmony.UnpatchAll(MOD_NAME);
         }
 
+    }
+
+    namespace Dummy
+    {
+        
     }
 }
