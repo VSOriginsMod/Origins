@@ -18,7 +18,7 @@ namespace rpskills.CoreSys
     // TODO(chris): What is this? I found it on CharacterSelectionPacket, and
     //              a constructor was implicitly defined. For now, I'll
     //              explicitly define.
-    [ProtoContract]
+    [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
     public class HeritageSelectionPacket
     {
         public bool DidSelect;
