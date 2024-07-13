@@ -16,7 +16,7 @@ namespace rpskills.CoreSys
     /// See Vintagestory.GameContent.CharacterSelectionPacket for more details.
     /// </summary>
     // TODO(chris): What is this? I found it on CharacterSelectionPacket, and
-    //              a constructor was implicitly defined. For now, I'll
+    //              a constructor was "implicitly defined." For now, I'll
     //              explicitly define.
     [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
     public class HeritageSelectionPacket
