@@ -19,10 +19,6 @@
       <HintPath>$(VINTAGE_STORY)/VSSurvivalMod.dll</HintPath>
       <Private>false</Private>
     </Reference>
-    <Reference Include="Harmony">
-      <HintPath>$(VINTAGE_STORY)/Lib/0Harmony.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
   </ItemGroup>
 
 <ItemGroup>
@@ -32,6 +28,11 @@
   <Content Include="modinfo.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
   </Content>
+</ItemGroup>
+
+<ItemGroup>
+  <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  <PackageReference Include="protobuf-net" Version="2.4.7" />
 </ItemGroup>
 
 </Project>

@@ -73,14 +73,15 @@ namespace rpskills
             TryClose();
         }
 
-        //<summary>
-        //Updates the text for the skills screen
-        //</summary>
-        //<remakrs>
-        //Text is a placeholder, it still needs to be hooked up to retireve the player's skills
-        //</remarks>
+        /// <summary>
+        /// Updates the text for the skills screen
+        /// </summary>
+        /// <remakrs>
+        /// Text is a placeholder, it still needs to be hooked up to retireve the player's skills
+        /// </remarks>
         private void UpdateSkillsText()
         {
+
             string skilltext =
                 "Skills\n" +
                 "\nBody: " + 10 +
