@@ -174,8 +174,8 @@ namespace rpskills
         {
             this.sapi = api;
 
-            // NOTE(chris): this big block tells the server how to reply to
-            //              incoming packets with respect to heritage selection
+            // tells the server how to reply to incoming packets with
+            // respect to heritage selection
             api.Network.GetChannel(CHANNEL_CORE_RPSKILLS)
                 .SetMessageHandler<HeritageSelectionPacket>(
                     new NetworkClientMessageHandler<HeritageSelectionPacket>(
@@ -183,7 +183,7 @@ namespace rpskills
                 )
             );
 
-            // NOTE(chris): tells the server what to do when a player connects
+            // tells the server what to do when a player connects
             api.Event.PlayerJoin += this.Event_PlayerJoinServer;
 
             // FEAT(chris): primary functionality of the branch
@@ -206,7 +206,7 @@ namespace rpskills
                 fromPlayer.GetModdata(CFG_HERITAGE), false
             );
 
-            if (didSelectBefore) {
+            if (false && didSelectBefore) {
                 api.Logger.Warning("you've already chosen a heritage");
                 return;
             }
@@ -222,7 +222,15 @@ namespace rpskills
                 //NOTE(chris): the following list is pulled from
                 //CharacterSystem.onCharacterSelection. Use this list to
                 //impl "Origin"s and "Skills", etc.
+                //SKILL-------- (reverse order bc origin applies skill bonuses
 
+                foreach (Skill skill in Skills)
+                {
+                    // capi.world.player.worlddata.entityplayer.watchedattributes
+                    api.Logger.Debug("Setting s_" + skill.Name + " to 0.");
+                    fromPlayer.WorldData.EntityPlayer.WatchedAttributes.SetFloat("s_" + skill.Name, 0);
+                }
+                //ORIGIN--------
                 //TODO(chris): use player.WatchedAttributes.SetString to store
                 //              the heritage name (setCharacterClass)
 
@@ -231,8 +239,6 @@ namespace rpskills
 
                 //TODO(chris): change entity behavior using
                 //              fromPlayer.Entity.GetBehavior<T>()
-
-
             }
             //TODO(chris): mark all changed WatchedAttributes as dirty
 

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Vintagestory.API.Client;
+using Vintagestory.API.Common;
 
 namespace rpskills
 {
@@ -81,12 +82,21 @@ namespace rpskills
         /// </remarks>
         private void UpdateSkillsText()
         {
+            string skilltext = "Skills:\n";
 
-            string skilltext =
-                "Skills\n" +
-                "\nBody: " + 10 +
-                "\nMind: " + 10 +
-                "\nSpirit: " + 10;
+            foreach(var attr in capi.World.Player.WorldData.EntityPlayer.WatchedAttributes)
+            {
+                capi.Logger.Debug(attr.Key);
+                if(!attr.Key.StartsWith("s_"))
+                {
+                    continue;
+                }
+                skilltext += "\t" + attr.Key + ": " + attr.Value.ToString() + "\n";
+            }
+
+
+            capi.Logger.Debug("found following:" + skilltext);
+
             //Get the text element
             SingleComposer.GetDynamicText(SkillsDialog)?.SetNewText(skilltext);
         }
