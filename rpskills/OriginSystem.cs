@@ -30,7 +30,7 @@ namespace origins
 
         public static Origin GetOrigin(string name)
         {
-            return EntriesByName[name];
+            return ElementsByName[name];
         }
 
         /// <summary>
@@ -177,7 +177,7 @@ namespace origins
             }
 
             api.Logger.Debug(fromPlayer.PlayerName + " is originally a(n) " + packet.OriginName);
-
+            /*aosjdfklasdf;adskljfk;ladsjfk;ads;fkjads;kfjk;adlsjfk;ldasj;fja;kfkj;asjf;asldjf;jHELP*/
             if (packet.DidSelect)
             {
                 fromPlayer.SetModdata(
@@ -191,6 +191,21 @@ namespace origins
 
                 //TODO(chris): use player.WatchedAttributes.SetString to store
                 //              the origin name (setCharacterClass)
+
+                api.Logger.Debug("Beginning to add skills");
+                if (!SkillSystem.Loaded)
+                {
+                    api.Logger.Debug("building skill sys");
+
+                    SkillSystem.Build(api);
+                }
+
+                foreach (Skill skill in SkillSystem.Elements)
+                {
+                    fromPlayer.WorldData.EntityPlayer.WatchedAttributes.RemoveAttribute("s_" + skill.Name);
+                    api.Logger.Debug("Setting " + skill.Name + "@" + skill.Level);
+                    fromPlayer.WorldData.EntityPlayer.WatchedAttributes.SetFloat("s_" + skill.Name, skill.Level);
+                }
 
                 //TODO(chris): next, attributes are to be applied
                 //              (applyTraitAttributes)

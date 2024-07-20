@@ -81,12 +81,20 @@ namespace rpskills
         //</remarks>
         private void UpdateSkillsText()
         {
-            string skilltext =
-                "Skills\n" +
-                "\nBody: " + 10 +
-                "\nMind: " + 10 +
-                "\nSpirit: " + 10;
-            //Get the text element
+            string skilltext = "Skills:\n";
+
+            foreach (var attr in capi.World.Player.WorldData.EntityPlayer.WatchedAttributes)
+            {
+                capi.Logger.Debug(attr.Key);
+                if (!attr.Key.StartsWith("s_"))
+                {
+                    continue;
+                }
+                skilltext += "\t" + attr.Key + ": " + attr.Value.ToString() + "\n";
+            }
+
+            capi.Logger.Debug("found following:" + skilltext);
+
             SingleComposer.GetDynamicText(SkillsDialog)?.SetNewText(skilltext);
         }
     }

@@ -17,9 +17,14 @@ namespace origins
     /// <typeparam name="T">Metric as defined in ./origins/assets/config</typeparam>
     internal abstract class ProgressionSystem<T> where T : INamedProgression
     {
+        /*
+         * aspdfjkladsjfiadspioafipopapioarsiourapo
+         * 
+         * why did I wirte static?!?!?!?!?!?
+         */
         internal static bool Loaded = false;
-        internal static List<T> Entries;
-        internal static Dictionary<string, T> EntriesByName;
+        internal static List<T> Elements;
+        internal static Dictionary<string, T> ElementsByName;
 
         /// <summary>
         /// Uses `api` to load the contents of `asset_path` into inherited
@@ -32,12 +37,13 @@ namespace origins
             if (Loaded) return;
             Loaded = true;
 
-            Entries = api.Assets.Get(asset_path).ToObject<List<T>>(null);
-            EntriesByName = new Dictionary<string, T>();
+            Elements = api.Assets.Get(asset_path).ToObject<List<T>>(null);
+            ElementsByName = new Dictionary<string, T>();
 
-            foreach (T element in Entries)
+            foreach (T element in Elements)
             {
-                EntriesByName[element.Name] = element;
+                api.Logger.Debug("Discovered element " + element.Name);
+                ElementsByName[element.Name] = element;
             }
         }
 
