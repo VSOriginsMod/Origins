@@ -1,31 +1,10 @@
+using origins;
 using System;
 using System.Collections.Generic;
+using System.Reflection.Metadata.Ecma335;
 
 namespace rpskills.CoreSys
 {
-    public class Origin
-    {
-        public string Name;
-
-        /// <summary>
-        /// key: skill; value: level
-        /// </summary>
-        public Dictionary<string, int> Skillset;
-    }
-
-    // TODO(chris): move to its own file
-    public class Skill
-    {
-        public string Name;
-
-        public int Level;
-
-        /// <summary>
-        /// key: attribute; value: modifier
-        /// </summary>
-        public List<string> Paths;
-    }
-
     public class Path
     {
         public string Name;
