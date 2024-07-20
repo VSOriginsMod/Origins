@@ -27,7 +27,7 @@ namespace rpskills
 
         private const string MOD_NAME = "origins";
         private const string CHANNEL_CORE_RPSKILLS = "origins-core";
-        private const string CFG_HERITAGE = "chooseOrigin";
+        private const string CFG_ORIGIN = "chooseOrigin";
 
 
         /*
@@ -47,8 +47,8 @@ namespace rpskills
         private Dictionary<string, Path> PathsByName;
         private List<Skill> Skills;
         private Dictionary<string, Skill> SkillsByName;
-        private List<Heritage> Heritages;
-        private Dictionary<string, Heritage> HeritagesByName;
+        private List<Origin> Origins;
+        private Dictionary<string, Origin> OriginsByName;
 
 
 
@@ -65,12 +65,12 @@ namespace rpskills
 
             api.Network
                 .RegisterChannel(CHANNEL_CORE_RPSKILLS)
-                .RegisterMessageType<HeritageSelectionPacket>()
-                .RegisterMessageType<HeritageSelectedState>();
+                .RegisterMessageType<OriginSelectionPacket>()
+                .RegisterMessageType<OriginSelectedState>();
 
         }
 
-        private void LoadCharacterHeritages()
+        private void LoadCharacterOrigins()
         {
             this.Paths = this.api.Assets
                 .Get("rpskills:config/paths.json").ToObject<List<Path>>(null);
@@ -90,17 +90,17 @@ namespace rpskills
             }
             api.Logger.Event("loaded skills");
 
-            this.Heritages = this.api.Assets
-                .Get("rpskills:config/heritages.json").ToObject<List<Heritage>>(null);
-            HeritagesByName = new Dictionary<string, Heritage>();
-            foreach (Heritage heritage in this.Heritages)
+            this.Origins = this.api.Assets
+                .Get("rpskills:config/heritages.json").ToObject<List<Origin>>(null);
+            OriginsByName = new Dictionary<string, Origin>();
+            foreach (Origin origin in this.Origins)
             {
-                this.HeritagesByName[heritage.Name] = heritage;
+                this.OriginsByName[origin.Name] = origin;
             }
-            api.Logger.Event("loaded heritages");
+            api.Logger.Event("loaded origins");
 
 
-            this.api.Logger.Debug("Heritages and Skills loaded!");
+            this.api.Logger.Debug("Origins and Skills loaded!");
         }
 
 
@@ -115,11 +115,11 @@ namespace rpskills
         {
             this.capi = api;
 
-            // tell client how to handle server sending heritage information
+            // tell client how to handle server sending origin information
             api.Network
                 .GetChannel(CHANNEL_CORE_RPSKILLS)
-                .SetMessageHandler<HeritageSelectedState>(
-                    new NetworkServerMessageHandler<HeritageSelectedState>(
+                .SetMessageHandler<OriginSelectedState>(
+                    new NetworkServerMessageHandler<OriginSelectedState>(
                         this.OnSelectedState
                 ));
 
@@ -127,7 +127,7 @@ namespace rpskills
             api.Event.PlayerJoin += this.Event_PlayerJoin;
 
             // FEAT(chris): primary functionality of the branch
-            api.Event.BlockTexturesLoaded += this.LoadCharacterHeritages;
+            api.Event.BlockTexturesLoaded += this.LoadCharacterOrigins;
 
             //Note(Moon):
             //these lines are what's needed in order to turn the dialog box, the initialization
@@ -156,7 +156,7 @@ namespace rpskills
             return true;
         }
 
-        private void OnSelectedState(HeritageSelectedState s)
+        private void OnSelectedState(OriginSelectedState s)
         {
             this.api.Logger.Debug("Recieved status of heriatge selection: " + s.DidSelect);
             this.didSelect = s.DidSelect;
@@ -175,11 +175,11 @@ namespace rpskills
             this.sapi = api;
 
             // NOTE(chris): this big block tells the server how to reply to
-            //              incoming packets with respect to heritage selection
+            //              incoming packets with respect to origin selection
             api.Network.GetChannel(CHANNEL_CORE_RPSKILLS)
-                .SetMessageHandler<HeritageSelectionPacket>(
-                    new NetworkClientMessageHandler<HeritageSelectionPacket>(
-                        this.OnHeritageSelection
+                .SetMessageHandler<OriginSelectionPacket>(
+                    new NetworkClientMessageHandler<OriginSelectionPacket>(
+                        this.OnOriginSelection
                 )
             );
 
@@ -189,33 +189,33 @@ namespace rpskills
             // FEAT(chris): primary functionality of the branch
             api.Event.ServerRunPhase(
                 EnumServerRunPhase.ModsAndConfigReady,
-                new Action(this.LoadCharacterHeritages)
+                new Action(this.LoadCharacterOrigins)
             );
         }
 
         /// <summary>
-        /// how the server handles a player selecting a heritage. this is the
-        /// wrapper for character heritage 'setter'
+        /// how the server handles a player selecting a origin. this is the
+        /// wrapper for character origin 'setter'
         /// </summary>
         /// <param name="fromPlayer">packet-emitting client</param>
-        /// <param name="packet">heritage selection data</param>
+        /// <param name="packet">origin selection data</param>
         /// <exception cref="NotImplementedException">You Should Not See This in dev</exception>
-        private void OnHeritageSelection(IServerPlayer fromPlayer, HeritageSelectionPacket packet)
+        private void OnOriginSelection(IServerPlayer fromPlayer, OriginSelectionPacket packet)
         {
             bool didSelectBefore = SerializerUtil.Deserialize<bool>(
-                fromPlayer.GetModdata(CFG_HERITAGE), false
+                fromPlayer.GetModdata(CFG_ORIGIN), false
             );
 
             if (didSelectBefore) {
-                api.Logger.Warning("you've already chosen a heritage");
+                api.Logger.Warning("you've already chosen an origin");
                 return;
             }
 
-            api.Logger.Debug("successfully chosen " + packet.HeritageName);
+            api.Logger.Debug("successfully chosen " + packet.OriginName);
 
             if(packet.DidSelect) {
                 fromPlayer.SetModdata(
-                    CFG_HERITAGE,
+                    CFG_ORIGIN,
                     SerializerUtil.Serialize<bool>(packet.DidSelect)
                 );
 
@@ -224,7 +224,7 @@ namespace rpskills
                 //impl "Origin"s and "Skills", etc.
 
                 //TODO(chris): use player.WatchedAttributes.SetString to store
-                //              the heritage name (setCharacterClass)
+                //              the origin name (setCharacterClass)
 
                 //TODO(chris): next, attributes are to be applied
                 //              (applyTraitAttributes)
@@ -250,7 +250,7 @@ namespace rpskills
 
 
         /// <summary>
-        /// here, we want to make sure all of the player heritage data is
+        /// here, we want to make sure all of the player origin data is
         /// selected and valid. If handling is set to `PreventDefault`, then
         /// the system must eventually call `Network.SendPlayerNowReady()`!
         /// </summary>
@@ -301,13 +301,13 @@ namespace rpskills
             //              player-chosen values to put here.
             // tell the server what the player selected
             didSelect = true;
-            HeritageSelectionPacket p = new HeritageSelectionPacket {
+            OriginSelectionPacket p = new OriginSelectionPacket {
                 DidSelect = didSelect,
-                HeritageName = this.HeritagesByName["average"].Name,
+                OriginName = this.OriginsByName["average"].Name,
             };
             capi.Network
                 .GetChannel(CHANNEL_CORE_RPSKILLS)
-                .SendPacket<HeritageSelectionPacket>
+                .SendPacket<OriginSelectionPacket>
                 (
                     p
                 );
@@ -337,8 +337,8 @@ namespace rpskills
 
             this.sapi.Network
                 .GetChannel(CHANNEL_CORE_RPSKILLS)
-                .SendPacket<HeritageSelectedState>(
-                    new HeritageSelectedState
+                .SendPacket<OriginSelectedState>(
+                    new OriginSelectedState
                     {
                         DidSelect = this.didSelect
                     },
