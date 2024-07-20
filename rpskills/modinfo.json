@@ -1,14 +1,14 @@
 {
-    "type": "code",
-    "modid": "rpskills",
-    "name": "rpskills",
-    "authors": [
-        "RSparling",
-        "ChristJohnson"
-    ],
-    "description": "To be added",
-    "version": "0.0.0",
-    "dependencies": {
-        "game": ""
-    }
+  "type": "code",
+  "modid": "origins",
+  "name": "Origins",
+  "authors": [
+    "RSparling",
+    "ChristJohnson"
+  ],
+  "description": "To be added",
+  "version": "0.0.0",
+  "dependencies": {
+    "game": ""
+  }
 }
