@@ -12,16 +12,23 @@ namespace origins
 {
     internal class SkillSystem : ProgressionSystem<Skill>
     {
+        /*
+         * 
+         * jasdfasipodfpoiadsripoaewuiporuqwipoerpalskjd;flkjadsfipoewpior
+         * 
+         * 
+         * STATIC! STATIC!!!
+         */
         internal static void Build(ICoreAPI api)
         {
-            ProgressionSystem<Origin>.Load(api, "origins:config/skills.json");
+            ProgressionSystem<Skill>.Load(api, "origins:config/skills.json");
 
             api.Logger.Event("loaded skills");
         }
 
         public static Skill GetSkill(string name)
         {
-            return EntriesByName[name];
+            return ElementsByName[name];
         }
 
 
