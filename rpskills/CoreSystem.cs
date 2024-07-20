@@ -25,7 +25,7 @@ namespace rpskills
         ::::::::::::::::::::::::::::::::
          */
 
-        private const string MOD_NAME = "origins";
+        private const string MOD_NAME = "Origins";
         private const string CHANNEL_CORE_RPSKILLS = "origins-core";
         private const string CFG_ORIGIN = "chooseOrigin";
 
@@ -91,7 +91,7 @@ namespace rpskills
             api.Logger.Event("loaded skills");
 
             this.Origins = this.api.Assets
-                .Get("rpskills:config/heritages.json").ToObject<List<Origin>>(null);
+                .Get("rpskills:config/origins.json").ToObject<List<Origin>>(null);
             OriginsByName = new Dictionary<string, Origin>();
             foreach (Origin origin in this.Origins)
             {
@@ -158,7 +158,7 @@ namespace rpskills
 
         private void OnSelectedState(OriginSelectedState s)
         {
-            this.api.Logger.Debug("Recieved status of heriatge selection: " + s.DidSelect);
+            this.api.Logger.Debug("Recieved status of origin selection: " + s.DidSelect);
             this.didSelect = s.DidSelect;
         }
 
