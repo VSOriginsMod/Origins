@@ -5,7 +5,7 @@ using ProtoBuf;
 namespace rpskills.CoreSys
 {
     
-    class HeritageSelectedState
+    class OriginSelectedState
     {
         public bool DidSelect;
     }
@@ -19,10 +19,10 @@ namespace rpskills.CoreSys
     //              a constructor was implicitly defined. For now, I'll
     //              explicitly define.
     [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
-    public class HeritageSelectionPacket
+    public class OriginSelectionPacket
     {
         public bool DidSelect;
-        public string HeritageName;
+        public string OriginName;
 
     }
 }

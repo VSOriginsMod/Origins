@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace rpskills.CoreSys
 {
-    public class Heritage
+    public class Origin
     {
         public string Name;
 
