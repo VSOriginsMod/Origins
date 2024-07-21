@@ -3,18 +3,13 @@ using System.Collections.Generic;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
-using Vintagestory.API.Util;
-using rpskills.CoreSys;
-using origins;
-using System.Collections.ObjectModel;
-using System.Linq;
 
 //TODO(chris): refactor naming scheme: "Heratige" => "Origins"
 //NOTE(chris): all current WARN(chris) in this file indicates client-server
 //              interactions. They depend on the network channel feature, which
 //              must be created and debugged first.
 
-namespace rpskills
+namespace origins
 {
     /// <summary>
     /// ModSystem is the base for any VintageStory code mods.
@@ -81,8 +76,6 @@ namespace rpskills
             // this.charDlg = api.Gui.LoadedGuis
             //     .Find((GuiDialog dlg) => dlg is GuiDialogCharacterBase)
             //     as GuiDialogCharacterBase;
-
-            LoadCommands();
         }
 
         public override void StartServerSide(ICoreServerAPI api)
@@ -96,6 +89,8 @@ namespace rpskills
                 EnumServerRunPhase.ModsAndConfigReady,
                 new Action(this.LoadProgressionSystems)
             );
+
+            LoadCommands();
         }
 
         private void LoadProgressionSystems()
@@ -118,6 +113,20 @@ namespace rpskills
             this.api.Logger.Debug("Origins and Skills loaded!");
         }
 
+
+
+        /*
+        ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+        ::::::::::::::Just Don't Look Past This Line::::::::::::::
+        ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+         */
+
+
+
+
+        /// <summary>
+        /// Must be called server-side!!!
+        /// </summary>
         private void LoadCommands()
         {
             // create client commands
@@ -182,6 +191,8 @@ namespace rpskills
                     eplr.WatchedAttributes.SetFloat("s_" + skill.Name, new_val);
                 }
 
+                eplr.WatchedAttributes.MarkAllDirty();
+
                 return TextCommandResult.Success(result);
             });
 
@@ -190,7 +201,7 @@ namespace rpskills
             set_skill.WithDescription("Sets the given skill of the caller to a given value.");
             set_skill.HandleWith(args => {
                 float new_val = 4f;
-                string skill = "s_woodsman";
+                string skill = "s_farmer";
                 string result = "";
                 EntityPlayer eplr = args.Caller.Player.WorldData.EntityPlayer;
 
@@ -226,6 +237,14 @@ namespace rpskills
 
         }
 
+        public static void ListWatchedAttributes(ICoreServerAPI api, IServerPlayer player)
+        {
+            foreach (var foo in player.Entity.WatchedAttributes.Keys)
+            {
+                api.Logger.Debug(foo);
+            }
+        }
+
 
         /*
         ::::::::::::::::::::::::::::::::
@@ -238,5 +257,11 @@ namespace rpskills
             base.Dispose();
         }
 
+    }
+
+    public class Path
+    {
+        public string Name;
+        public string Value;
     }
 }
