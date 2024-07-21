@@ -24,7 +24,7 @@ public static class Program
 
 public class BuildContext : FrostingContext
 {
-    public const string ProjectName = "rpskills";
+    public const string ProjectName = "origins";
     public string BuildConfiguration { get; set; }
     public string Version { get; }
     public string Name { get; }
