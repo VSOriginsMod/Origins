@@ -5,7 +5,7 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CakeBuild", "CakeBuild\CakeBuild.csproj", "{BC68EDF6-C294-4819-B7F4-9EA99B73E69D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "origins", "rpskills\origins.csproj", "{CB2100BC-F653-402A-9FBA-EA463C2BD4FC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "origins", "origins\origins.csproj", "{CB2100BC-F653-402A-9FBA-EA463C2BD4FC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

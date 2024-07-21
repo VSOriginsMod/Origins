@@ -1,13 +1,6 @@
 ﻿using ProtoBuf;
-using rpskills;
-using rpskills.CoreSys;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
@@ -168,11 +161,11 @@ namespace origins
             );
 
             // FIXME(chris): forcing OriginSelectionPacket to be processed
-            RemembersOriginSelection = false;
+            // RemembersOriginSelection = true;
 
             if (RemembersOriginSelection)
             {
-                api.Logger.Warning("you've already chosen an origin");
+                api.Logger.Debug("you've already chosen an origin");
                 return;
             }
 
@@ -192,20 +185,8 @@ namespace origins
                 //TODO(chris): use player.WatchedAttributes.SetString to store
                 //              the origin name (setCharacterClass)
 
-                api.Logger.Debug("Beginning to add skills");
-                if (!SkillSystem.Loaded)
-                {
-                    api.Logger.Debug("building skill sys");
-
-                    SkillSystem.Build(api);
-                }
-
-                foreach (Skill skill in SkillSystem.Elements)
-                {
-                    fromPlayer.WorldData.EntityPlayer.WatchedAttributes.RemoveAttribute("s_" + skill.Name);
-                    api.Logger.Debug("Setting " + skill.Name + "@" + skill.Level);
-                    fromPlayer.WorldData.EntityPlayer.WatchedAttributes.SetFloat("s_" + skill.Name, skill.Level);
-                }
+                api.Logger.Debug("Initializing player skill data for " + fromPlayer.PlayerName);
+                SkillSystem.InitializePlayer(fromPlayer);
 
                 //TODO(chris): next, attributes are to be applied
                 //              (applyTraitAttributes)
@@ -235,7 +216,7 @@ namespace origins
             );
 
             // FIXME(chris): forcing origin selection every time client joins
-            OriginSelected = false;
+            // OriginSelected = false;
 
             if (!OriginSelected)
             {

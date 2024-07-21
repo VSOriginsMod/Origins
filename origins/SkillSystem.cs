@@ -1,11 +1,8 @@
-﻿using rpskills;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.Datastructures;
 using Vintagestory.API.Server;
 
 namespace origins
@@ -31,6 +28,36 @@ namespace origins
             return ElementsByName[name];
         }
 
+        /// <summary>
+        /// Set player's skill level
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// This must be preformed server-side
+        /// </remarks>
+        /// 
+        /// <param name="player"></param>
+        /// <param name="SkillName"></param>
+        /// <param name="val"></param>
+        public static void SetSkil(IServerPlayer player, string SkillName, IAttribute val)
+        {
+            player.Entity.WatchedAttributes.SetAttribute(SkillName, val);
+        }
+
+        public static void SetSkil(ICoreServerAPI api, string playerUid, string SkillName, IAttribute val)
+        {
+            api.World.PlayerByUid(playerUid).Entity.WatchedAttributes.SetAttribute(SkillName, val);
+        }
+
+        public static void InitializePlayer(IServerPlayer player)
+        {
+            foreach (Skill skill in Elements)
+            {
+                player.WorldData.EntityPlayer.WatchedAttributes.RemoveAttribute("s_" + skill.Name);
+                player.WorldData.EntityPlayer.WatchedAttributes.SetFloat("s_" + skill.Name, skill.Level);
+            }
+
+        }
 
         private PlayerSkillsUI PlayerSkillsUI;
 
