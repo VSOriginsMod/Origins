@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Vintagestory.API.Client;
+﻿using Vintagestory.API.Client;
 
-namespace rpskills
+namespace origins
 {
     /// <summary>
     /// Represents a GUI dialog for displaying player skills.
@@ -81,13 +76,20 @@ namespace rpskills
         /// </remarks>
         private void UpdateSkillsText()
         {
+            string skilltext = "Skills:\n";
 
-            string skilltext =
-                "Skills\n" +
-                "\nBody: " + 10 +
-                "\nMind: " + 10 +
-                "\nSpirit: " + 10;
-            //Get the text element
+            foreach (var attr in capi.World.Player.WorldData.EntityPlayer.WatchedAttributes)
+            {
+                capi.Logger.Debug(attr.Key);
+                if (!attr.Key.StartsWith("s_"))
+                {
+                    continue;
+                }
+                skilltext += "\t" + attr.Key + ": " + attr.Value.ToString() + "\n";
+            }
+
+            capi.Logger.Debug("found following:" + skilltext);
+
             SingleComposer.GetDynamicText(SkillsDialog)?.SetNewText(skilltext);
         }
     }
