@@ -1,0 +1,72 @@
+[
+    {
+        "name": "average",
+        "skills": {
+            "combatant":    5,
+            "farmer ":      5,
+            "homekeeper":   5,
+            "hunter":       5,
+            "miner":        5,
+            "processer":    5,
+            "rancher":      5,
+            "smith":        5,
+            "woodsman":     5
+        }
+    },
+    {
+        "name": "industrial",
+        "skills": {
+            "combatant":    5,
+            "farmer ":      0,
+            "homekeeper":   0,
+            "hunter":       5,
+            "miner":        10,
+            "processer":    10,
+            "rancher":      0,
+            "smith":        10,
+            "woodsman":     0
+        }
+    },
+    {
+        "name": "agrarian",
+        "skills": {
+            "combatant":    0,
+            "farmer ":      10,
+            "homekeeper":   5,
+            "hunter":       5,
+            "miner":        0,
+            "processer":    0,
+            "rancher":      10,
+            "smith":        0,
+            "woodsman":     10
+        }
+    },
+    {
+        "name": "violent",
+        "skills": {
+            "combatant":    10,
+            "farmer ":      0,
+            "homekeeper":   0,
+            "hunter":       10,
+            "miner":        10,
+            "processer":    0,
+            "rancher":      5,
+            "smith":        5,
+            "woodsman":     0
+        }
+    },
+    {
+        "name": "nomadic",
+        "skills": {
+            "combatant":    5,
+            "farmer ":      0,
+            "homekeeper":   10,
+            "hunter":       10,
+            "miner":        10,
+            "processer":    0,
+            "rancher":      0,
+            "smith":        0,
+            "woodsman":     5
+        }
+    }
+]
