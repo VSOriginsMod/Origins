@@ -4,6 +4,7 @@ using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.Server;
+using Vintagestory.Client.NoObf;
 
 namespace origins
 {
@@ -39,7 +40,7 @@ namespace origins
         /// <param name="player"></param>
         /// <param name="SkillName"></param>
         /// <param name="val"></param>
-        public static void SetSkil(IServerPlayer player, string SkillName, IAttribute val)
+        public static void SetSkil(IPlayer player, string SkillName, IAttribute val)
         {
             player.Entity.WatchedAttributes.SetAttribute(SkillName, val);
         }
@@ -47,6 +48,26 @@ namespace origins
         public static void SetSkil(ICoreServerAPI api, string playerUid, string SkillName, IAttribute val)
         {
             api.World.PlayerByUid(playerUid).Entity.WatchedAttributes.SetAttribute(SkillName, val);
+        }
+
+        /// <summary>
+        /// Increment skill by 1
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// This must be called server side!
+        /// </remarks>
+        /// 
+        /// <param name="player"></param>
+        /// <param name="SkillName"></param>
+        /// <returns></returns>
+        public static float IncrementSkill(IPlayer player, string SkillName)
+        {
+            SkillName = "s_" + SkillName;
+            var skillExp = player.Entity.WatchedAttributes.GetFloat(SkillName);
+            skillExp += 1;
+            player.Entity.WatchedAttributes.SetFloat(SkillName, skillExp);
+            return skillExp;
         }
 
         public static void InitializePlayer(IServerPlayer player)

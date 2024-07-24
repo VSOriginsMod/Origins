@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
+using Vintagestory.GameContent;
 
 //TODO(chris): refactor naming scheme: "Heratige" => "Origins"
 //NOTE(chris): all current WARN(chris) in this file indicates client-server
@@ -56,6 +58,9 @@ namespace origins
             api.Network.RegisterChannel(CHANNEL_CORE_RPSKILLS);
 
             OriginSystem.NetworkRegistration(api);
+
+            api.ClassRegistry.BlockClassToTypeMapping.Remove("BlockCrop");
+            api.ClassRegistry.BlockClassToTypeMapping.Add("BlockCrop", typeof(OriginBlockCrop));
 
         }
 
@@ -257,6 +262,68 @@ namespace origins
             base.Dispose();
         }
 
+    }
+
+    public class OriginBlockCrop : BlockCrop
+    {
+        public override void OnBlockBroken(IWorldAccessor world, BlockPos pos, IPlayer byPlayer, float dropQuantityMultiplier = 1)
+        {
+            base.OnBlockBroken(world, pos, byPlayer, dropQuantityMultiplier);
+
+            if (world.Api.Side == EnumAppSide.Client)
+            {
+                return;
+            }
+
+            var new_val = SkillSystem.IncrementSkill(byPlayer, "farmer");
+
+            if (new_val != 0)
+            {
+                world.Api.Logger.Debug("[origins] BlockCrop.OnBlockBroken called for " + byPlayer.PlayerName + "! Now at " + new_val);
+            }
+        }
+
+        public override ItemStack[] GetDrops(IWorldAccessor world, BlockPos pos, IPlayer byPlayer, float dropQuantityMultiplier = 1f)
+        {
+            world.Api.Logger.Debug("[origins] BlockCrop.GetDrops called for " + pos.ToString());
+
+            dropQuantityMultiplier = 50;
+
+            BlockEntityFarmland blockEntityFarmland = world.BlockAccessor.GetBlockEntity(pos.DownCopy()) as BlockEntityFarmland;
+            if (blockEntityFarmland == null)
+            {
+                dropQuantityMultiplier *= byPlayer?.Entity.Stats.GetBlended("wildCropDropRate") ?? 1f;
+            }
+
+            SplitDropStacks = false;
+            ItemStack[] array = base.GetDrops(world, pos, byPlayer, dropQuantityMultiplier);
+            if (blockEntityFarmland == null)
+            {
+                List<ItemStack> list = new List<ItemStack>();
+                ItemStack[] array2 = array;
+                foreach (ItemStack itemStack in array2)
+                {
+                    if (!(itemStack.Item is ItemPlantableSeed))
+                    {
+                        itemStack.StackSize = GameMath.RoundRandom(world.Rand, WildCropDropMul * (float)itemStack.StackSize);
+                    }
+
+                    if (itemStack.StackSize > 0)
+                    {
+                        list.Add(itemStack);
+                    }
+                }
+
+                array = list.ToArray();
+            }
+
+            if (blockEntityFarmland != null)
+            {
+                array = blockEntityFarmland.GetDrops(array);
+            }
+
+            return array;
+        }
     }
 
     public class Path
