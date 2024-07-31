@@ -1,4 +1,0 @@
-namespace rpskills.CoreSys
-{
-
-}

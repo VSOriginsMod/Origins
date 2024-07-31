@@ -14,7 +14,7 @@ namespace origins
     /// <summary>
     /// ModSystem is the base for any VintageStory code mods.
     /// </summary>
-    public class CoreSystem : ModSystem
+    public class OriginsCoreSystem : ModSystem
     {
 
         /*
