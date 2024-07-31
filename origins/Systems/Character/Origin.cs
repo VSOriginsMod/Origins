@@ -1,4 +1,5 @@
-﻿using ProtoBuf;
+﻿using Origins.Config;
+using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using Vintagestory.API.Client;
@@ -6,79 +7,155 @@ using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 using Vintagestory.API.Util;
 
-namespace origins
+namespace Origins.Character
 {
-    internal class OriginSystem : ProgressionSystem<Origin>
+    class OriginSelectionState
     {
-        private const string CFG = "chooseOrigin";
-        private const string ORIGIN_NETWORK_CHANNEL = CoreSystem.CHANNEL_CORE_RPSKILLS;
-        private static INetworkChannel NetworkChannel;
+        public bool HasSelected;
+    }
 
-        internal static void Build(ICoreAPI api)
-        {
-            ProgressionSystem<Origin>.Load(api, "origins:config/origins.json");
+    /// <summary>
+    /// Contains all data regarding Origin selection.
+    /// 
+    /// See Vintagestory.GameContent.CharacterSelectionPacket for more details.
+    /// </summary>
+    // TODO(chris): What is this? I found it on CharacterSelectionPacket, and
+    //              a constructor was "implicitly defined." For now, I'll
+    //              explicitly define.
+    [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
+    public class OriginSelectionPacket
+    {
+        public bool DidSelect;
+        public string OriginName;
+    }
 
-            api.Logger.Event("loaded origins");
-        }
 
-        public static Origin GetOrigin(string name)
-        {
-            return ElementsByName[name];
-        }
+    public class Origin // : IAttribute
+    {
+        public string Name;
 
         /// <summary>
-        /// Runs during Start phase of CoreSystem (maybe rename to SysCore?)
-        /// to inform both client and server of network protocols.
+        /// key: skill; value: level
         /// </summary>
-        /// <param name="api"></param>
-        internal static void NetworkRegistration(ICoreAPI api)
-        {
-            // ensure network channel exists
-            NetworkChannel = api.Network.GetChannel(ORIGIN_NETWORK_CHANNEL);
-            NetworkChannel ??= api.Network.RegisterChannel(ORIGIN_NETWORK_CHANNEL);
+        public Dictionary<string, int> Skillset;
 
-            NetworkChannel
+    }
+
+
+    internal class OriginSystem : ModSystem
+    {
+        private ICoreAPI api;
+
+        private bool OriginSelected = false;
+
+        public override double ExecuteOrder()
+        {
+            return base.ExecuteOrder();
+        }
+
+        public override bool ShouldLoad(EnumAppSide forSide)
+        {
+            return true;
+        }
+
+        public override void Start(ICoreAPI api)
+        {
+            this.api = api;
+
+            api.Network.GetChannel(ModConstants.ChannelOriginsCore)
                 .RegisterMessageType<OriginSelectionPacket>()
                 .RegisterMessageType<OriginSelectionState>();
         }
 
-
-        private bool OriginSelected = false;
-
-        public OriginSystem(ICoreAPI api) : base(api)
+        public override void StartClientSide(ICoreClientAPI api)
         {
-        }
-
-        internal override void ClientInit(ICoreClientAPI capi)
-        {
-            capi.Network.GetChannel(ORIGIN_NETWORK_CHANNEL)
+            api.Network.GetChannel(ModConstants.ChannelOriginsCore)
                     .SetMessageHandler<OriginSelectionState>(
                         new NetworkServerMessageHandler<OriginSelectionState>(
-                            CHOriginSelected
+                            CHandle_OriginSelected
                     ));
 
-            capi.Event.IsPlayerReady += CEIsPlayerReady;
-            capi.Event.PlayerJoin += CEPlayerJoin;
-
+            api.Event.IsPlayerReady += CEvent_IsPlayerReady;
+            api.Event.PlayerJoin += CEvent_PlayerJoin;
         }
 
-        internal override void ServerInit(ICoreServerAPI sapi)
+        public override void StartServerSide(ICoreServerAPI api)
         {
             // NOTE(chris): this big block tells the server how to reply to
             //              incoming packets with respect to origin selection
-            sapi.Network.GetChannel(ORIGIN_NETWORK_CHANNEL)
+            api.Network.GetChannel(ModConstants.ChannelOriginsCore)
                 .SetMessageHandler<OriginSelectionPacket>(
                     new NetworkClientMessageHandler<OriginSelectionPacket>(
-                        SHOriginSelected
+                        SHandle_OriginSelected
                 ));
 
             // NOTE(chris): tells the server what to do when a player connects
-            sapi.Event.PlayerJoin += SEPlayerJoin;
+            api.Event.PlayerJoin += SEvent_PlayerJoin;
         }
 
-        public void CHOriginSelected(OriginSelectionState server_state)
+        public override void AssetsLoaded(ICoreAPI api)
+        {
+            ModLogging.Debug(api, "Origins loaded");
+        }
+
+
+        public void CHandle_OriginSelected(OriginSelectionState server_state)
         {
             this.OriginSelected = server_state.HasSelected;
+        }
+
+        /// <summary>
+        /// how the server handles a player selecting a origin. this is the
+        /// wrapper for character origin 'setter'
+        /// </summary>
+        /// <param name="fromPlayer">packet-emitting client</param>
+        /// <param name="packet">origin selection data</param>
+        /// <exception cref="NotImplementedException">You Should Not See This in dev</exception>
+        private void SHandle_OriginSelected(IServerPlayer fromPlayer, OriginSelectionPacket packet)
+        {
+            bool RemembersOriginSelection = SerializerUtil.Deserialize<bool>(
+                fromPlayer.GetModdata("OriginSelected"), false
+            );
+
+            // FIXME(chris): forcing OriginSelectionPacket to be processed
+            // RemembersOriginSelection = true;
+
+            if (RemembersOriginSelection)
+            {
+                api.Logger.Debug("you've already chosen an origin");
+                return;
+            }
+
+            api.Logger.Debug(fromPlayer.PlayerName + " is originally a(n) " + packet.OriginName);
+
+            if (packet.DidSelect)
+            {
+                fromPlayer.SetModdata(
+                    "OriginSelected",
+                    SerializerUtil.Serialize<bool>(packet.DidSelect)
+                );
+
+                //NOTE(chris): the following list is pulled from
+                //CharacterSystem.onCharacterSelection. Use this list to
+                //impl "Origin"s and "Skills", etc.
+
+                fromPlayer.WorldData.EntityPlayer.WatchedAttributes.SetString("Origin", packet.OriginName);
+                SkillSystem instance = (SkillSystem) api.ModLoader.GetModSystem("Origins.Character.SkillSystem");
+                instance.InitializePlayer(fromPlayer);
+
+                api.Logger.Debug("Initializing player skill data for " + fromPlayer.PlayerName);
+
+                //TODO(chris): next, attributes are to be applied
+                //              (applyTraitAttributes)
+
+                //TODO(chris): change entity behavior using
+                //              fromPlayer.Entity.GetBehavior<T>()
+
+
+            }
+            //TODO(chris): mark all changed WatchedAttributes as dirty
+
+            fromPlayer.BroadcastPlayerData(true);
         }
 
         /// <summary>
@@ -88,7 +165,7 @@ namespace origins
         /// </summary>
         /// <param name="handling">server's understanding of client readiness</param>
         /// <returns></returns>
-        private bool CEIsPlayerReady(ref EnumHandling handling)
+        private bool CEvent_IsPlayerReady(ref EnumHandling handling)
         {
             if (OriginSelected)
             {
@@ -101,7 +178,7 @@ namespace origins
             return false;
         }
 
-        private void CEPlayerJoin(IClientPlayer byPlayer)
+        private void CEvent_PlayerJoin(IClientPlayer byPlayer)
         {
             ICoreClientAPI capi = api as ICoreClientAPI;
             if (OriginSelected && byPlayer.PlayerUID == capi.World.Player.PlayerUID)
@@ -132,7 +209,8 @@ namespace origins
             //              selection is done with Origin selection.
             // WARN(chris): these are default values, use the Gui to get
             //              player-chosen values to put here.
-            // tell the server what the player selected
+
+            // at some point we tell the server what the player selected
             OriginSelected = true;
             OriginSelectionPacket p = new OriginSelectionPacket
             {
@@ -140,65 +218,13 @@ namespace origins
                 OriginName = "average",
             };
 
-            capi.Network.GetChannel(ORIGIN_NETWORK_CHANNEL)
+            capi.Network.GetChannel(ModConstants.ChannelOriginsCore)
                 .SendPacket(p);
+
+            
             capi.Network.SendPlayerNowReady();
 
             guiStuff_OnClose.Invoke();
-        }
-
-        /// <summary>
-        /// how the server handles a player selecting a origin. this is the
-        /// wrapper for character origin 'setter'
-        /// </summary>
-        /// <param name="fromPlayer">packet-emitting client</param>
-        /// <param name="packet">origin selection data</param>
-        /// <exception cref="NotImplementedException">You Should Not See This in dev</exception>
-        private void SHOriginSelected(IServerPlayer fromPlayer, OriginSelectionPacket packet)
-        {
-            bool RemembersOriginSelection = SerializerUtil.Deserialize<bool>(
-                fromPlayer.GetModdata(CFG), false
-            );
-
-            // FIXME(chris): forcing OriginSelectionPacket to be processed
-            // RemembersOriginSelection = true;
-
-            if (RemembersOriginSelection)
-            {
-                api.Logger.Debug("you've already chosen an origin");
-                return;
-            }
-
-            api.Logger.Debug(fromPlayer.PlayerName + " is originally a(n) " + packet.OriginName);
-            /*aosjdfklasdf;adskljfk;ladsjfk;ads;fkjads;kfjk;adlsjfk;ldasj;fja;kfkj;asjf;asldjf;jHELP*/
-            if (packet.DidSelect)
-            {
-                fromPlayer.SetModdata(
-                    CFG,
-                    SerializerUtil.Serialize<bool>(packet.DidSelect)
-                );
-
-                //NOTE(chris): the following list is pulled from
-                //CharacterSystem.onCharacterSelection. Use this list to
-                //impl "Origin"s and "Skills", etc.
-
-                //TODO(chris): use player.WatchedAttributes.SetString to store
-                //              the origin name (setCharacterClass)
-
-                api.Logger.Debug("Initializing player skill data for " + fromPlayer.PlayerName);
-                SkillSystem.InitializePlayer(fromPlayer);
-
-                //TODO(chris): next, attributes are to be applied
-                //              (applyTraitAttributes)
-
-                //TODO(chris): change entity behavior using
-                //              fromPlayer.Entity.GetBehavior<T>()
-
-
-            }
-            //TODO(chris): mark all changed WatchedAttributes as dirty
-
-            fromPlayer.BroadcastPlayerData(true);
         }
 
         /// <summary>
@@ -206,17 +232,14 @@ namespace origins
         /// client, over Network:RPSKILLS_CORE_CHANNEL.
         /// </summary>
         /// <param name="byPlayer">the joining player</param>
-        public void SEPlayerJoin(IServerPlayer byPlayer)
+        public void SEvent_PlayerJoin(IServerPlayer byPlayer)
         {
             // WARN(chris): we are using Moddata(createCharacter) as a
             //              placeholder for now -- functionality is tied to
             //              VintageStory.GameContent.CharacterSystem
             OriginSelected = SerializerUtil.Deserialize<bool>(
-                byPlayer.GetModdata("createCharacter"), false
+                byPlayer.GetModdata("OriginSelected"), false
             );
-
-            // FIXME(chris): forcing origin selection every time client joins
-            // OriginSelected = false;
 
             if (!OriginSelected)
             {
@@ -224,10 +247,11 @@ namespace origins
             }
             else
             {
-                api.Logger.Debug("Character creation has happened!");
+                api.Logger.Debug("Character creation has happened already.");
             }
 
-            (api as ICoreServerAPI).Network.GetChannel(ORIGIN_NETWORK_CHANNEL)
+            // tell byPlayer's client their game state
+            (api as ICoreServerAPI).Network.GetChannel(ModConstants.ChannelOriginsCore)
                 .SendPacket(
                     new OriginSelectionState
                     {
@@ -240,38 +264,5 @@ namespace origins
                 );
             api.Logger.Debug("Package sent indicating selection status");
         }
-    }
-
-    public class Origin : INamedProgression
-    {
-        public string Name;
-
-        /// <summary>
-        /// key: skill; value: level
-        /// </summary>
-        public Dictionary<string, int> Skillset;
-
-        string INamedProgression.Name => Name;
-    }
-
-    class OriginSelectionState
-    {
-        public bool HasSelected;
-    }
-
-    /// <summary>
-    /// Contains all data regarding Origin selection.
-    /// 
-    /// See Vintagestory.GameContent.CharacterSelectionPacket for more details.
-    /// </summary>
-    // TODO(chris): What is this? I found it on CharacterSelectionPacket, and
-    //              a constructor was "implicitly defined." For now, I'll
-    //              explicitly define.
-    [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
-    public class OriginSelectionPacket
-    {
-        public bool DidSelect;
-        public string OriginName;
-
     }
 }

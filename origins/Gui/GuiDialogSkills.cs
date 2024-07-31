@@ -1,6 +1,6 @@
 ﻿using Vintagestory.API.Client;
 
-namespace origins
+namespace Origins
 {
     /// <summary>
     /// Represents a GUI dialog for displaying player skills.

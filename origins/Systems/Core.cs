@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Origins.Config;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
@@ -9,63 +11,55 @@ using Vintagestory.API.Server;
 //              interactions. They depend on the network channel feature, which
 //              must be created and debugged first.
 
-namespace origins
+namespace Origins
 {
+
+    // TODO (chris): add any kinda network-based config (e.g. Vintagestory.GameContent.SurvivalConfig)
+    // source: https://github.com/anegostudios/vssurvivalmod/blob/master/Systems/Core.cs
+
     /// <summary>
     /// ModSystem is the base for any VintageStory code mods.
     /// </summary>
     public class OriginsCoreSystem : ModSystem
     {
 
-        /*
-        ::::::::::::::::::::::::::::::::
-        ::::::::::::Constant::::::::::::
-        ::::::::::::::::::::::::::::::::
-         */
-
-        private const string MOD_NAME = "Origins";
-        public const string CHANNEL_CORE_RPSKILLS = "origins-core";
-
-
-        /*
-        ::::::::::::::::::::::::::::::::
-        :::::::::::::Shared:::::::::::::
-        ::::::::::::::::::::::::::::::::
-         */
 
         private ICoreAPI api;
-        private ICoreClientAPI capi;
         private ICoreServerAPI sapi;
 
-        // TODO(chris): convert this to collection
-        private OriginSystem originSystem;
-        private SkillSystem skillSystem;
-
         // FEAT(chris): need the lists
-        private List<Path> Paths;
-        private Dictionary<string, Path> PathsByName;
+        private List<SkillPath> SkillPaths;
+        private Dictionary<string, SkillPath> SkillPathsByName;
 
-        /// <summary>
-        /// Utility for accessing common client/server functionality.
-        /// </summary>
+
+
+        public override double ExecuteOrder()
+        {
+            return base.ExecuteOrder();
+        }
+
+        public override bool ShouldLoad(EnumAppSide forSide)
+        {
+            return true;
+        }
+
+        public override void StartPre(ICoreAPI api)
+        {
+            // When loaded, load origins' assets
+            api.Assets.AddModOrigin(ModConstants.Domain, Path.Combine(Vintagestory.API.Config.GamePaths.AssetsPath, "origins"));
+        }
+
         public override void Start(ICoreAPI api)
         {
             // NOTE(Chris): The Start* methods of base are empty.
             this.api = api;
 
-            api.Network.RegisterChannel(CHANNEL_CORE_RPSKILLS);
-
-            OriginSystem.NetworkRegistration(api);
+            api.Network.RegisterChannel(ModConstants.ChannelOriginsCore);
 
         }
 
         public override void StartClientSide(ICoreClientAPI api)
         {
-            this.capi = api;
-
-            originSystem = new OriginSystem(capi);
-            skillSystem = new SkillSystem(capi);
-
             // adds paths, skills, origins
             api.Event.BlockTexturesLoaded += this.LoadProgressionSystems;
 
@@ -82,160 +76,33 @@ namespace origins
         {
             this.sapi = api;
 
-            originSystem = new OriginSystem(sapi);
-
             // adds paths, skills, origins
             api.Event.ServerRunPhase(
                 EnumServerRunPhase.ModsAndConfigReady,
                 new Action(this.LoadProgressionSystems)
             );
 
-            LoadCommands();
+            Commands.LoadCommands(sapi);
         }
 
         private void LoadProgressionSystems()
         {
 
             /* IGNORE FOR SAKE OF CLARITY */
-            this.Paths = this.api.Assets
-                .Get("origins:config/paths.json").ToObject<List<Path>>(null);
-            api.Logger.Event("loaded paths");
-            PathsByName = new Dictionary<string, Path>();
-            foreach (Path path in this.Paths)
+            this.SkillPaths = this.api.Assets
+                .Get("origins:config/paths.json").ToObject<List<SkillPath>>(null);
+            ModLogging.Debug(api, "Paths loaded");
+            SkillPathsByName = new Dictionary<string, SkillPath>();
+            foreach (SkillPath path in this.SkillPaths)
             {
-                this.PathsByName[path.Name] = path;
+                this.SkillPathsByName[path.Name] = path;
             }
             /* IGNORE FOR SAKE OF CLARITY */
 
-            SkillSystem.Build(api);
-            OriginSystem.Build(api);
-
-            this.api.Logger.Debug("Origins and Skills loaded!");
+            // SkillSystem.Build(api);
+            // OriginSystem.Build(api);
         }
 
-
-
-        /*
-        ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-        ::::::::::::::Just Don't Look Past This Line::::::::::::::
-        ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-         */
-
-
-
-
-        /// <summary>
-        /// Must be called server-side!!!
-        /// </summary>
-        private void LoadCommands()
-        {
-            // create client commands
-            IChatCommand get = api.ChatCommands.Create("get");
-            get.RequiresPlayer();
-            get.RequiresPrivilege(Privilege.root);
-            get.WithDescription("Read WatchedAttributes of the caller.");
-            get.HandleWith(args => {
-                string cmdargs = args.RawArgs.PopAll();
-                string result = "given " + cmdargs + "\n";
-                EntityPlayer eplr = args.Caller.Player.WorldData.EntityPlayer;
-
-                foreach (var attr in eplr.WatchedAttributes)
-                {
-                    result += attr.Key;
-                    result += "\n";
-                }
-
-                return TextCommandResult.Success(result);
-            });
-
-            IChatCommand get_skill = get.BeginSubCommand("skill");
-            get_skill.RequiresPrivilege(Privilege.root);
-            get_skill.WithDescription("Read Origin Skills of the caller.");
-            get_skill.HandleWith(args => {
-                string result = "";
-                EntityPlayer eplr = args.Caller.Player.WorldData.EntityPlayer;
-
-                foreach (var attr in eplr.WatchedAttributes)
-                {
-                    if (!attr.Key.StartsWith("s_"))
-                    {
-                        continue;
-                    }
-
-                    result += attr.Key + ": " + attr.Value.ToString() + "\n";
-
-                }
-
-                return TextCommandResult.Success(result);
-            });
-            get_skill.EndSubCommand();
-
-
-            get.Validate(); // name, priv, desc, handler
-
-
-
-
-            IChatCommand set = api.ChatCommands.Create("set");
-            set.RequiresPlayer();
-            // set.WithArgs( populate with Skills )
-            set.RequiresPrivilege("root");
-            set.WithDescription("Resets Origin Skills of the caller.");
-            set.HandleWith(args => {
-                float new_val = 0f;
-                string result = "";
-                EntityPlayer eplr = args.Caller.Player.WorldData.EntityPlayer;
-
-                foreach (Skill skill in SkillSystem.Elements)
-                {
-                    eplr.WatchedAttributes.SetFloat("s_" + skill.Name, new_val);
-                }
-
-                eplr.WatchedAttributes.MarkAllDirty();
-
-                return TextCommandResult.Success(result);
-            });
-
-            IChatCommand set_skill = set.BeginSubCommand("skill");
-            set_skill.RequiresPrivilege(Privilege.root);
-            set_skill.WithDescription("Sets the given skill of the caller to a given value.");
-            set_skill.HandleWith(args => {
-                float new_val = 4f;
-                string skill = "s_farmer";
-                string result = "";
-                EntityPlayer eplr = args.Caller.Player.WorldData.EntityPlayer;
-
-                result += "set " + skill + " to lv " + new_val;
-                eplr.WatchedAttributes.SetFloat(skill, new_val);
-
-                return TextCommandResult.Success(result);
-            });
-            set_skill.EndSubCommand();
-
-
-            set.Validate(); // name, priv, desc, handler
-
-
-
-            IChatCommand del = api.ChatCommands.Create("del");
-            del.RequiresPrivilege(Privilege.root);
-            del.WithDescription("Deletes all Origin Skills from the caller's player data.");
-            del.HandleWith(args => {
-                string result = "";
-                EntityPlayer eplr = args.Caller.Player.WorldData.EntityPlayer;
-
-                foreach (Skill skill in SkillSystem.Elements)
-                {
-                    eplr.WatchedAttributes.RemoveAttribute("s_" + skill.Name);
-                }
-
-                return TextCommandResult.Success(result);
-            });
-
-
-            del.Validate(); // name, priv, desc, handler
-
-        }
 
         public static void ListWatchedAttributes(ICoreServerAPI api, IServerPlayer player)
         {
@@ -259,7 +126,7 @@ namespace origins
 
     }
 
-    public class Path
+    public class SkillPath
     {
         public string Name;
         public string Value;
