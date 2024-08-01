@@ -98,6 +98,11 @@ namespace Origins.Character
             ModLogging.Debug(api, "Origins loaded");
         }
 
+        public override void AssetsFinalize(ICoreAPI api)
+        {
+            base.AssetsFinalize(api);
+        }
+
 
         public void CHandle_OriginSelected(OriginSelectionState server_state)
         {

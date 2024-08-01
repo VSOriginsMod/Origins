@@ -1,6 +1,7 @@
 ﻿using Origins.Config;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
@@ -63,7 +64,7 @@ namespace Origins.Character
             return true;
         }
 
-        [Obsolete("This function should be removed because it relied on a previous logical model")]
+        // [Obsolete("This function should be removed because it relied on a previous logical model")]
         public void InitializePlayer(IServerPlayer player)
         {
             foreach (Skill skill in Skills)
@@ -110,6 +111,11 @@ namespace Origins.Character
         }
     }
 
+    public class SkillSet : ArrayAttribute<Skill>
+    {
+
+    }
+
     // TODO (chris): implement IAttribute when migrating to using IAssetManager Assets
     public class Skill //: IAttribute
     {
@@ -117,6 +123,5 @@ namespace Origins.Character
 
         public int Level;
 
-        public List<string> Paths;
     }
 }

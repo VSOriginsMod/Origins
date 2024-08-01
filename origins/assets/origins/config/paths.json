@@ -1,6 +1,7 @@
 [
     {
-        "name": "default",
-        "value": "hi"
+      "name": "sharecropping",
+      "skill": "horticulture",
+      "value": "hi"
     }
 ]
