@@ -1,7 +1,6 @@
 ﻿using Origins.Config;
-using System;
+using Origins.Gui;
 using System.Collections.Generic;
-using System.IO;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
@@ -15,7 +14,7 @@ namespace Origins.Character
         public static List<Skill> Elements;
         public List<Skill> Skills;
 
-        private PlayerSkillsUI PlayerSkillsUI;
+        private GuiDialogSkills PlayerSkillsUI;
 
         public override double ExecuteOrder()
         {
@@ -35,9 +34,9 @@ namespace Origins.Character
         {
             //Note(Moon):
             //these lines are what's needed in order to turn the dialog box, the initialization
-            //of the PlayerSkillsUI can be moved to a seprate class and likely will be at a later date.
+            //of the GuiDialogSkills can be moved to a seprate class and likely will be at a later date.
             //It just needs the capi in order to be be hooked for the hotkey.
-            PlayerSkillsUI = new PlayerSkillsUI(api);
+            PlayerSkillsUI = new GuiDialogSkills(api);
             api.Input.RegisterHotKey(
                 "Skill Interface",
                 "Opens up the Skills GUI",

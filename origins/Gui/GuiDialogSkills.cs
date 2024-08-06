@@ -1,20 +1,20 @@
 ﻿using Vintagestory.API.Client;
 
-namespace Origins
+namespace Origins.Gui
 {
     /// <summary>
     /// Represents a GUI dialog for displaying player skills.
     /// </summary>
-    internal class PlayerSkillsUI : GuiDialog
+    internal class GuiDialogSkills : GuiDialog
     {
         //The name of the GUI element tag for the purpose of updating text
         public const string SkillsDialog = "Skills Dialog";
 
         /// <summary>
-        /// Constructor for the PlayerSkillsUI class.
+        /// Constructor for the GuiDialogSkills class.
         /// </summary>
         /// <param name="capi">The ICoreClientAPI object used to pass to the base class and compose the dialog.</param>
-        public PlayerSkillsUI(ICoreClientAPI capi) : base(capi)
+        public GuiDialogSkills(ICoreClientAPI capi) : base(capi)
         {
             ComposeGUI();
         }
