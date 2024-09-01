@@ -1,0 +1,106 @@
+[
+  {
+    "code": "horticultural",
+    "traits": [],
+    "gear": [
+      {
+        "type": "item",
+        "code": "clothes-upperbody-homespun-shirt"
+      },
+      {
+        "type": "item",
+        "code": "clothes-lowerbody-nomad-trousers"
+      },
+      {
+        "type": "item",
+        "code": "clothes-foot-nomad-boots"
+      },
+      {
+        "type": "item",
+        "code": "clothes-hand-commoner-gloves"
+      }
+    ]
+  },
+  {
+    "code": "pastoral",
+    "traits": [ ],
+    "gear": [
+      {
+        "type": "item",
+        "code": "clothes-head-shepherds-cowl"
+      },
+      {
+        "type": "item",
+        "code": "clothes-upperbody-pastoral-shirt"
+      },
+      {
+        "type": "item",
+        "code": "clothes-lowerbody-pastoral-pants"
+      },
+      {
+        "type": "item",
+        "code": "clothes-waist-peasant-strap"
+      },
+      {
+        "type": "item",
+        "code": "clothes-foot-shepherd-sandals"
+      },
+      {
+        "type": "item",
+        "code": "clothes-waist-reindeer-herder-waistband"
+      }
+    ]
+  },
+  {
+    "code": "agrarian",
+    "traits": [ ],
+    "gear": [
+      {
+        "type": "item",
+        "code": "clothes-head-peasent-head-scarf"
+      },
+      {
+        "type": "item",
+        "code": "clothes-upperbody-peasent-shirt"
+      },
+      {
+        "type": "item",
+        "code": "clothes-lowerbody-tattered-peasent-gown"
+      },
+      {
+        "type": "item",
+        "code": "clothes-foot-peasent-slippers"
+      },
+      {
+        "type": "item",
+        "code": "clothes-waist-peasant-strap"
+      }
+    ]
+  },
+  {
+    "code": "hunter-gatherer",
+    "traits": [ ],
+    "gear": [
+      {
+        "type": "item",
+        "code": "clothes-upperbody-raw-hide-mantle"
+      },
+      {
+        "type": "item",
+        "code": "clothes-head-hunter-cape"
+      },
+      {
+        "type": "item",
+        "code": "clothes-upperbody-raw-hide-mantle"
+      },
+      {
+        "type": "item",
+        "code": "clothes-lowerbody-raw-hide-trousers"
+      },
+      {
+        "type": "item",
+        "code": "clothes-foot-worn-leather-boots"
+      }
+    ]
+  }
+]

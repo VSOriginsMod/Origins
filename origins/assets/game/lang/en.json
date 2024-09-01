@@ -1,0 +1,10 @@
+{
+  "characterclass-horticultural": "Horticultural",
+  "characterclass-pastoral": "Pastoral",
+  "characterclass-agrarian": "Argarian",
+  "characterclass-hunter-gatherer": "Hunter-Gatherer",
+  "characterdesc-horticultural": "Horticultural societies are those that grow modest and simple fields while hunting and gathering to supplement their diet. They are often nomadic however if they find a suitable area may settle down for quite some time.",
+  "characterdesc-pastoral": "Pastoral societies are those that rely on the raising of animals for their food and other needs. They are often nomadic and follow their herds from place to place.",
+  "characterdesc-agrarian": "Agrarian societies are those that rely on the cultivation of crops for their food and other needs. They are often sedentary and live in villages or towns.",
+  "characterdesc-hunter-gatherer": "Hunter-Gatherer societies are those that rely on the hunting of animals and gathering of plants for their food and other needs. They are often nomadic and follow the food sources as they move through the landscape."
+}
