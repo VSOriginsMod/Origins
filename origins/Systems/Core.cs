@@ -6,7 +6,6 @@ using System.Reflection;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
-using Vintagestory.Common;
 
 //TODO(chris): refactor naming scheme: "Heratige" => "Origins"
 //NOTE(chris): all current WARN(chris) in this file indicates client-server
@@ -65,6 +64,8 @@ namespace Origins.Systems
 
             api.Network.RegisterChannel(ChannelOriginsCore);
 
+            RegisterPatches(api);
+
         }
 
         public override void AssetsFinalize(ICoreAPI api)
@@ -118,6 +119,27 @@ namespace Origins.Systems
             // OriginSystem.Build(api);
         }
 
+        public static void RegisterPatches(ICoreAPI api)
+        {
+
+            foreach (var patch in patchTypes)
+            {
+                try
+                {
+                    OriginsLogger.Debug(api, "Attempting to register following code patch: " + patch.Name);
+                    patch
+                        .GetMethod("RegisterPatch", new[] { typeof(ICoreAPI) })
+                        .Invoke(null, new object[] { api });
+                }
+                catch (Exception err)
+                {
+                    OriginsLogger.Debug(api, "Oops! " + patch.Name + " was not recognized by this process... Does it implement Origins.Patches.IPatch");
+                    OriginsLogger.Error(api, err);
+                }
+
+            }
+        }
+
         public static void ExecutePatches(ICoreAPI api)
         {
             // only want to patch on server-side
@@ -132,39 +154,13 @@ namespace Origins.Systems
                 {
                     OriginsLogger.Debug(api, "Attempting to apply following code patch: " + patch.Name);
                     patch
-                        .GetMethod("RegisterPatch", new[] { typeof(ICoreAPI) })
+                        .GetMethod("ApplyPatch", new[] { typeof(ICoreAPI) })
                         .Invoke(null, new object[] { api });
                 }
                 catch (Exception err)
                 {
                     OriginsLogger.Debug(api, "Oops! " + patch.Name + " was not recognized by this process... Does it implement Origins.Patches.IPatch");
                     OriginsLogger.Error(api, err);
-                }
-
-            }
-        }
-
-        public static void ExecutePatches()
-        {
-            // only want to patch on server-side
-            // if (EnumAppSide.Server != api.Side)
-            // {
-            //     return;
-            // }
-
-            foreach (var patch in patchTypes)
-            {
-                try
-                {
-                    // OriginsLogger.Debug(api, "Attempting to apply following code patch: " + patch.Name);
-                    patch
-                        .GetMethod("RegisterPatch", new Type[] { })
-                        .Invoke(null, new Type[] { });
-                }
-                catch (Exception err)
-                {
-                    // OriginsLogger.Debug(api, "Oops! " + patch.Name + " was not recognized by this process... Does it implement Origins.Patches.IPatch");
-                    // OriginsLogger.Error(api, err);
                 }
 
             }

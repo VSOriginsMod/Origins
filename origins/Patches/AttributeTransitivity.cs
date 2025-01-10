@@ -117,7 +117,7 @@ namespace Origins.Patches
             byEntity.Api.Logger.Debug("Attacking using an item with transitive properties!");
             byEntity.Api.Logger.Debug(slot.GetStackName() + " has transitive properties: ");
 
-            foreach (string key in slot.Itemstack.ItemAttributes.Token["transitiveAttributes"])
+            foreach (string key in slot.Itemstack.ItemAttributes.Token["transitiveProperties"].ToArray())
             {
                 byEntity.Api.Logger.Debug("   " + key + ": " + slot.Itemstack.ItemAttributes[key]);
             }

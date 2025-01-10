@@ -1,12 +1,11 @@
 ﻿using Origins.Gui;
-using Origins.Systems;
 using System.Collections.Generic;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.Server;
 
-namespace Origins.Character
+namespace Origins.Systems.Character
 {
     internal class SkillSystem : ModSystem
     {
