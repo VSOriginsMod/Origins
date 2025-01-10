@@ -1,11 +1,4 @@
-﻿using Origins.Config;
-using Origins.Gui;
-using ProtoBuf.Meta;
-using System.Linq;
-using Vintagestory.API.Client;
-using Vintagestory.API.Common;
-using Vintagestory.API.MathTools;
-using Vintagestory.Client.NoObf;
+﻿using Vintagestory.API.Common;
 
 namespace Origins.Systems.Horticulture
 {
@@ -19,7 +12,7 @@ namespace Origins.Systems.Horticulture
             base.OnLoaded(api);
 
             hortsysEnabled = api.ModLoader.IsModSystemEnabled("Origins.Systems.Horticulture.HorticultureSystem");
-            
+
         }
 
         public override void OnHeldInteractStart(ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel, bool firstEvent, ref EnumHandHandling handling)

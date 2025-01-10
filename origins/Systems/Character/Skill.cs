@@ -1,5 +1,5 @@
-﻿using Origins.Config;
-using Origins.Gui;
+﻿using Origins.Gui;
+using Origins.Systems;
 using System.Collections.Generic;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -50,7 +50,7 @@ namespace Origins.Character
         {
             Skills = api.Assets.Get("origins:config/skills.json").ToObject<List<Skill>>(null);
             Elements = Skills;
-            ModLogging.Debug(api, "Skills loaded");
+            OriginsLogger.Debug(api, "Skills loaded");
         }
 
         public bool ToggleGUI(KeyCombination comb)
@@ -108,6 +108,28 @@ namespace Origins.Character
                 api.World.PlayerByUid(playerUid) as IServerPlayer,
                 SkillName);
         }
+
+        /// <summary>
+        /// Increment skill by 1
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// This must be called server side!
+        /// </remarks>
+        /// 
+        /// <param name="player"></param>
+        /// <param name="SkillName"></param>
+        /// <returns></returns>
+        public static float IncrementSkill(IPlayer player, string SkillName)
+        {
+            SkillName = "s_" + SkillName;
+            var skillExp = player.Entity.WatchedAttributes.GetFloat(SkillName);
+            skillExp += 1;
+            player.Entity.WatchedAttributes.SetFloat(SkillName, skillExp);
+            return skillExp;
+        }
+
+
     }
 
     public class SkillSet : ArrayAttribute<Skill>

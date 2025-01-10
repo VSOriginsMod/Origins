@@ -1,11 +1,8 @@
-﻿using Origins.Config;
-using System;
+﻿using Origins.Systems;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
-using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
-using Vintagestory.Client.NoObf;
 
 namespace Origins.Gui
 {
@@ -31,10 +28,10 @@ namespace Origins.Gui
 
         //HudElementBlockAndEntityInfo
         //HudElementCoordinates
-        
+
         const string AnalysisPlaceholderTitle = "Analysis: Placeholder";
         const string AnalysisPlaceholderDetail = "a: 0\nb: 0\nc: 0\nStatbar Test";
-        
+
         public HudSeedAnalyzer(ICoreClientAPI capi) : base(capi)
         {
             ComposeSeedAnalysisHUD();
@@ -130,7 +127,7 @@ namespace Origins.Gui
                 }
 
                 ElementBounds statbarBounds = contentBounds.BelowCopy(0.0, 0.0, 0.0, 0.0);
-                
+
                 Composers["seedanalysishud"] = composer;
                 composer
                     .AddGameOverlay(containerBounds)
@@ -151,7 +148,7 @@ namespace Origins.Gui
                         contentBounds,
                         "seeddetail"
                     )//*/
-                    .AddStatbar(statbarBounds, new double[3] {0.0, 1.0, 0.0}, "seedstat1")
+                    .AddStatbar(statbarBounds, new double[3] { 0.0, 1.0, 0.0 }, "seedstat1")
                     .EndChildElements();
                 // richtext = composer.GetRichtext("rt");
                 if (detail.Length == 0)
@@ -171,7 +168,7 @@ namespace Origins.Gui
                 var cTitle = composer.GetStaticText("seedtitle");
                 var cDetails = composer.GetStaticText("seeddetail");
                 var cStatbar = composer.GetStatbar("seedstat1");
-                
+
                 composer.Compose();
             }
         }
@@ -241,7 +238,7 @@ namespace Origins.Gui
             {
                 currentBlock = null;
             }
-            else if(block != currentBlock || !currentPos.Equals(currentBlockSelection.Position) || currentSelectionIndex != currentBlockSelection.SelectionBoxIndex)
+            else if (block != currentBlock || !currentPos.Equals(currentBlockSelection.Position) || currentSelectionIndex != currentBlockSelection.SelectionBoxIndex)
             {
                 currentBlock = block;
                 currentSelectionIndex = currentBlockSelection.SelectionBoxIndex;
@@ -274,9 +271,8 @@ namespace Origins.Gui
             capi = api;
             TextUtil = new TextTextureUtil(capi);
 
-
-            ModLogging.Debug(api, "|-+ Created SeedAnalyzer");
-            ModLogging.Debug(api, "| |");
+            OriginsLogger.Debug(api, "|-+ Created SeedAnalyzer");
+            OriginsLogger.Debug(api, "| |");
 
             // This will get a line loop with vertices inside [-1,-1] till [1,1]
             MeshData rectangle = LineMeshUtil.GetRectangle(ColorUtil.WhiteArgb);
@@ -300,7 +296,7 @@ namespace Origins.Gui
 
         public void OnRenderFrame(float deltaTime, EnumRenderStage stage)
         {
-            ModLogging.Debug(capi, "| |- Rendered SeedAnalyzer");
+            OriginsLogger.Debug(capi, "| |- Rendered SeedAnalyzer");
 
             IShaderProgram curShader = capi.Render.CurrentActiveShader;
 
@@ -373,7 +369,7 @@ namespace Origins.Gui
 
         public void Dispose()
         {
-            ModLogging.Debug(capi, "| \\ Disposing of SeedAnalyzer");
+            OriginsLogger.Debug(capi, "| \\ Disposing of SeedAnalyzer");
             texMessage.Dispose();
             capi.Render.DeleteMesh(whiteRectangleRef);
             capi.Render.DeleteMesh(progressQuadRef);
