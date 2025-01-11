@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Reflection;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
@@ -26,11 +23,6 @@ namespace Origins.Systems
         public const string Domain = "origins";
         public const string ModName = "Origins";
         public const string ChannelOriginsCore = "origins-core";
-
-        private static IEnumerable<Type> patchTypes = Assembly
-            .GetExecutingAssembly()
-            .GetTypes()
-            .Where(t => null != t.GetInterface("IPatch"));
 
 
         private ICoreAPI api;
@@ -64,14 +56,6 @@ namespace Origins.Systems
 
             api.Network.RegisterChannel(ChannelOriginsCore);
 
-            RegisterPatches(api);
-
-        }
-
-        public override void AssetsFinalize(ICoreAPI api)
-        {
-            // apply patches
-            ExecutePatches(api);
         }
 
         public override void StartClientSide(ICoreClientAPI api)
@@ -117,53 +101,6 @@ namespace Origins.Systems
 
             // SkillSystem.Build(api);
             // OriginSystem.Build(api);
-        }
-
-        public static void RegisterPatches(ICoreAPI api)
-        {
-
-            foreach (var patch in patchTypes)
-            {
-                try
-                {
-                    OriginsLogger.Debug(api, "Attempting to register following code patch: " + patch.Name);
-                    patch
-                        .GetMethod("RegisterPatch", new[] { typeof(ICoreAPI) })
-                        .Invoke(null, new object[] { api });
-                }
-                catch (Exception err)
-                {
-                    OriginsLogger.Debug(api, "Oops! " + patch.Name + " was not recognized by this process... Does it implement Origins.Patches.IPatch");
-                    OriginsLogger.Error(api, err);
-                }
-
-            }
-        }
-
-        public static void ExecutePatches(ICoreAPI api)
-        {
-            // only want to patch on server-side
-            if (EnumAppSide.Server != api.Side)
-            {
-                return;
-            }
-
-            foreach (var patch in patchTypes)
-            {
-                try
-                {
-                    OriginsLogger.Debug(api, "Attempting to apply following code patch: " + patch.Name);
-                    patch
-                        .GetMethod("ApplyPatch", new[] { typeof(ICoreAPI) })
-                        .Invoke(null, new object[] { api });
-                }
-                catch (Exception err)
-                {
-                    OriginsLogger.Debug(api, "Oops! " + patch.Name + " was not recognized by this process... Does it implement Origins.Patches.IPatch");
-                    OriginsLogger.Error(api, err);
-                }
-
-            }
         }
 
 
