@@ -13,6 +13,7 @@ namespace Origins.Patches.Behaviors
         static readonly string attr_list_name = "transitiveAttributes";
 
         static ICoreAPI api;
+        private float mutation = 1.0f;
 
         public CBTransitiveAttribute(CollectibleObject collObj) : base(collObj)
         {
@@ -36,7 +37,7 @@ namespace Origins.Patches.Behaviors
             foreach (string attrKey in attr_list)
             {
                 // needs default init values if none are given by properties
-                collObj.Attributes.Token[attrKey] ??= JToken.FromObject(1.0f);
+                collObj.Attributes.Token[attrKey] ??= JToken.FromObject(mutation);
             }
         }
 
