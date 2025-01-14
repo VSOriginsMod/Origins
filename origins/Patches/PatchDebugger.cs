@@ -10,7 +10,9 @@ namespace Origins.Patches
         {
             if (attributes == null || !attributes.KeyExists("transitiveAttributes"))
             {
-                OriginsLogger.Debug(api, "ERROR: either attributes is null or it does not have a 'transitiveAttributes' key or both");
+                string foo = (attributes == null) ? "attributes is null " : "attributes is nonnull ";
+                foo += (!attributes.KeyExists("transitiveAttributes")) ? "transitiveAttributes key does not exist" : "transitiveAttributesKey exists";
+                OriginsLogger.Debug(api, "ERROR: " + foo);
                 return;
             }
 
@@ -32,6 +34,36 @@ namespace Origins.Patches
                 {
                     OriginsLogger.Debug(api, " val: DNE");
                 }
+            }
+        }
+
+        public static void PrintDebug(ICoreAPI api, ITreeAttribute attributes)
+        {
+            if (attributes == null || !attributes.HasAttribute("transitiveAttributes"))
+            {
+                string foo = (attributes == null) ? "attributes is null " : "attributes is nonnull ";
+                foo += (!attributes.HasAttribute("transitiveAttributes")) ? "transitiveAttributes key does not exist" : "transitiveAttributesKey exists";
+                OriginsLogger.Debug(api, "ERROR: " + foo);
+                return;
+            }
+
+            //OriginsLogger.Debug(api, attributes["transitiveAttributes"].ToJsonToken());
+            if (attributes["transitiveAttributes"].GetType() == typeof(StringArrayAttribute))
+            {
+                StringArrayAttribute arr = (StringArrayAttribute)attributes["transitiveAttributes"].GetValue();
+                foreach (string attrKey in arr.value)
+                {
+                    OriginsLogger.Debug(api, "  key: " + attrKey);
+                    if (attributes[attrKey].GetValue() is DoubleAttribute attr)
+                    {
+                        OriginsLogger.Debug(api, "  val: " + attr.value);
+                    }
+                    else
+                    {
+                        OriginsLogger.Debug(api, "  val: NotFloat");
+                    }
+                }
+
             }
         }
     }

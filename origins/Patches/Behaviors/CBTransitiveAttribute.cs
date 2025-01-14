@@ -14,7 +14,7 @@ namespace Origins.Patches.Behaviors
         static readonly string attr_list_name = "transitiveAttributes";
 
         static ICoreAPI api;
-        private float mutation = 1.0f;
+        private double mutation = 1.0f;
 
         public CBTransitiveAttribute(CollectibleObject collObj) : base(collObj)
         {
@@ -28,38 +28,52 @@ namespace Origins.Patches.Behaviors
         {
             base.Initialize(properties);
 
-            OriginsLogger.Debug(api, "[CBTransitiveAttribute] Initializing");
+            collObj.Attributes ??= properties;
+
+            OriginsLogger.Debug(api, "[CBTransitiveAttribute] Initializing" + collObj.Code);
+            OriginsLogger.Debug(api, "properties:");
+            if (properties.KeyExists(attr_list_name)) OriginsLogger.Debug(api, "  attr_list_name: " + properties[attr_list_name]);
+            if (properties.KeyExists(attr_list[0])) OriginsLogger.Debug(api, "  " + attr_list[0] + ": " + properties[attr_list[0]]);
+            OriginsLogger.Debug(api, "collObj.Attributes:");
+            if (properties.KeyExists(attr_list_name)) OriginsLogger.Debug(api, "  attr_list_name: " + collObj.Attributes[attr_list_name]);
+            if (properties.KeyExists(attr_list[0])) OriginsLogger.Debug(api, "  " + attr_list[0] + ": " + collObj.Attributes[attr_list[0]]);
+
+            mutation = properties[attr_list[0]].AsDouble();
 
             // the code until the end of the foreach loop is for making sure collectible objects retain externally defined Attributes
             // ensures (transitive) attribute list is in collObj's 'Attributes'
-            collObj.Attributes ??= properties ?? new JsonObject(new JObject());
-            collObj.Attributes.Token[attr_list_name] ??= JToken.FromObject(attr_list);
+            //collObj.Attributes ??= properties ?? new JsonObject(new JObject());
 
-            foreach (string attrKey in attr_list)
-            {
-                // needs default init values if none are given by properties
-                collObj.Attributes.Token[attrKey] ??= JToken.FromObject(mutation);
-            }
+            //if (!collObj.Attributes.KeyExists(attr_list_name))
+            //{
+            //    collObj.Attributes.Token[attr_list_name] = JToken.FromObject(attr_list);
+            //    foreach (string attrKey in attr_list)
+            //    {
+            //        // needs default init values if none are given by properties
+            //        collObj.Attributes.Token[attrKey] = JToken.FromObject(mutation);
+            //    }
+            //}
+
         }
 
         public override void OnHeldAttackStart(ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel, ref EnumHandHandling handHandling, ref EnumHandling handling)
         {
             OriginsLogger.Debug(byEntity.Api, "Attacking using an item with transitive properties!");
 
-            PatchDebugger.PrintDebug(byEntity.Api, slot.Itemstack.ItemAttributes);
+            PatchDebugger.PrintDebug(byEntity.Api, slot.Itemstack.Attributes);
 
             base.OnHeldAttackStart(slot, byEntity, blockSel, entitySel, ref handHandling, ref handling);
+        }
+
+        public override void OnHeldInteractStart(ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel, bool firstEvent, ref EnumHandHandling handHandling, ref EnumHandling handling)
+        {
+            byEntity.Api.Logger.Debug("AAAAAAAAAAAAAAAAAAAAAAAAA");
         }
 
         public override void GetHeldItemInfo(ItemSlot inSlot, StringBuilder dsc, IWorldAccessor world, bool withDebugInfo)
         {
             base.GetHeldItemInfo(inSlot, dsc, world, withDebugInfo);
-            dsc.AppendLine("Mutation Rate: " + mutation);
-        }
-
-        public override void OnHeldInteractStart(ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel, bool firstEvent, ref EnumHandHandling handHandling, ref EnumHandling handling)
-        {
-            //ItemPlantableSeed
+            dsc.AppendLine("Mutation Rate: " + inSlot.Itemstack.Attributes[attr_list[0]]);
         }
 
 
@@ -82,9 +96,16 @@ namespace Origins.Patches.Behaviors
                 {
                     CBTransitiveAttribute behavior = new CBTransitiveAttribute(item);
 
-                    JsonObject properties = new JsonObject(new JObject());
+                    item.Attributes ??= new JsonObject(new JObject());
 
-                    behavior.Initialize(properties);
+                    item.Attributes.Token[attr_list_name] = JToken.FromObject(attr_list);
+                    foreach (string attrKey in attr_list)
+                    {
+                        // needs default init values if none are given by properties
+                        item.Attributes.Token[attrKey] = JToken.FromObject(1.0d);
+                    }
+
+                    behavior.Initialize(item.Attributes);
 
                     item.CollectibleBehaviors = item.CollectibleBehaviors.Append(behavior);
                 }

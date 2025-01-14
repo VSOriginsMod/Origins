@@ -1,5 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using Origins.Systems;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Vintagestory.API.Common;
@@ -20,10 +22,34 @@ namespace Origins.Patches.Behaviors
         };
 
         static ICoreAPI api;
-        private float mutation = 1.0f;
+        static Random random = new Random();
+        static double mu = 0.5;
+        static double sigma = Math.ReciprocalEstimate(3.92d);
+        static NormalDistribution normalDistribution = GetNormalDistribution(mu, sigma);
+
+        public class TransitiveProps : CropBehavior
+        {
+            internal BlockPos pos = null;
+            internal double mutation = 0.0f;
+            internal ItemStack stack;
+
+            public TransitiveProps(Block block) : base(block)
+            {
+            }
+
+            internal void OnBlockPlaced()
+            {
+
+            }
+        };
+
+
+        private double mutation = 1.0d;
+        private TransitiveProps transitiveProps;
 
         public BBTransitiveAttribute(Block block) : base(block)
         {
+            transitiveProps = new TransitiveProps(block);
         }
 
         /// <summary>
@@ -34,7 +60,7 @@ namespace Origins.Patches.Behaviors
         {
             base.Initialize(properties);
 
-            OriginsLogger.Debug(api, "[BBTransitiveAttribute] Initializing " + block.Code);
+            //OriginsLogger.Debug(api, "[BBTransitiveAttribute] Initializing " + block.Code);
 
             if (!propertiesAtString.Equals("{}"))
                 api.Logger.Debug("Properties:\n{0}", propertiesAtString);
@@ -58,18 +84,112 @@ namespace Origins.Patches.Behaviors
 
             PatchDebugger.PrintDebug(byEntity.Api, slot.Itemstack.ItemAttributes);
 
+            StringBuilder drop_list = new StringBuilder("[");
+
+            foreach (BlockDropItemStack stack in slot.Itemstack.Block.Drops)
+            {
+                //drop_list.Append(stack.Attributes.Token[attr_list[0]]?.Value<double>());
+                drop_list.Append(stack.ResolvedItemstack.Item.Code);
+                if (stack.ResolvedItemstack.ItemAttributes.KeyExists(attr_list_name))
+                {
+                    drop_list.Append("(mutationRate:" + stack.ResolvedItemstack.Attributes.GetDouble("mutationRate") + ")");
+                }
+                drop_list.Append(", ");
+            }
+            drop_list.Remove(drop_list.Length - 2, 2);
+            drop_list.Append(']');
+
+            OriginsLogger.Debug(byEntity.Api, "  drops: " + slot.Itemstack.GetName() + " is: " + drop_list.ToString());
+
             base.OnHeldAttackStart(slot, byEntity, blockSel, entitySel, ref handHandling, ref handling);
         }
 
         public override void GetHeldItemInfo(ItemSlot inSlot, StringBuilder dsc, IWorldAccessor world, bool withDebugInfo)
         {
             base.GetHeldItemInfo(inSlot, dsc, world, withDebugInfo);
-            dsc.AppendLine("Mutation Rate: " + mutation);
+            dsc.AppendLine("Mutation Rate: " + inSlot.Itemstack.Attributes[attr_list[0]]);
         }
 
         public override string GetPlacedBlockInfo(IWorldAccessor world, BlockPos pos, IPlayer forPlayer)
         {
-            return "Mutation Rate: " + mutation;
+            return "Mutation Rate: " + world.BlockAccessor.GetBlock(pos).GetBehavior<BBTransitiveAttribute>()?.mutation ?? "unknown";
+        }
+
+        /// <summary>
+        /// This runs in BlockCrop as a BlockBehavior when a crop is broken: it is one of the first things to run.
+        /// </summary>
+        /// <param name="world"></param>
+        /// <param name="pos"></param>
+        /// <param name="byPlayer"></param>
+        /// <param name="handling"></param>
+        public override void OnBlockBroken(IWorldAccessor world, BlockPos pos, IPlayer byPlayer, ref EnumHandling handling)
+        {
+            base.OnBlockBroken(world, pos, byPlayer, ref handling);
+
+            foreach (BlockDropItemStack stack in block.Drops)
+            {
+                if (stack.ResolvedItemstack.ItemAttributes.KeyExists(attr_list_name))
+                {
+                    if (stack.ResolvedItemstack.ItemAttributes.KeyExists(attr_list[0]))
+                        stack.ResolvedItemstack.Attributes.SetDouble(attr_list[0], Mutate());
+                }
+            }
+        }
+
+        public override ItemStack[] GetDrops(IWorldAccessor world, BlockPos pos, IPlayer byPlayer, ref float dropChanceMultiplier, ref EnumHandling handling)
+        {
+            List<ItemStack> mutatedSeeds = new List<ItemStack>(1);
+
+            ItemStack seed = new ItemStack(world.GetItem(1709));
+            seed.Attributes[attr_list[0]] = new DoubleAttribute(Mutate());
+
+            mutatedSeeds.Add(seed);
+
+            // TODO(chris): set block.Attributes["debuffUnaffectedDrops"] for the modified ItemStacks that *must* drop.
+            //     This is so that BlockEntityFarmland knows not to apply random drop numbers to it.
+            //     This will have to be found by searching the block below to confirm farmland, then just assigning by hand, I think.
+            //     This also must be done somewhere else.
+
+            return mutatedSeeds.ToArray();
+        }
+
+        private double Mutate()
+        {
+            return mutation + normalDistribution(random.NextDouble());
+        }
+
+        private delegate double NormalDistribution(double x);
+
+        /// <summary>
+        /// Creates a normal distribution centered around mu translated down for a mix of negative numbers and positive numbers.
+        /// </summary>
+        /// <param name="mu">mean</param>
+        /// <param name="sigma">standard deviation</param>
+        /// <returns></returns>
+        private static NormalDistribution GetNormalDistribution(double mu, double sigma)
+        {
+            return (double x) =>
+            {
+                // NOTE(chris): denominator is applied with
+                //     numerator * Math.ReciprocalEstimate(denominator)
+                //     because we're alredy using the Math library
+
+                // NOTE(chris): I'm sorry! :_(
+                double numerator, denominator;
+
+                // numerator
+                numerator = Math.Pow(x - mu, 2);
+                denominator = 2 * Math.Pow(sigma, 2);
+
+                numerator = Math.Exp(-1 * (numerator * Math.ReciprocalEstimate(denominator)));
+
+                // denominator
+                denominator *= Math.PI;
+
+                numerator = numerator * Math.ReciprocalSqrtEstimate(denominator) - 0.95d;
+                denominator = 10;
+                return numerator * Math.ReciprocalEstimate(denominator);
+            };
         }
 
         public static void ApplyPatch(ICoreAPI api)
@@ -91,6 +211,7 @@ namespace Origins.Patches.Behaviors
                 if (PatchedClasses.Contains(block.Class))
                 {
                     BBTransitiveAttribute behavior = new BBTransitiveAttribute(block);
+                    behavior.transitiveProps = new TransitiveProps(block);
 
                     JsonObject properties = new JsonObject(new JObject());
 
@@ -99,6 +220,15 @@ namespace Origins.Patches.Behaviors
                     // since VSEssentials adds to both, we cannot vary from this practice
                     block.CollectibleBehaviors = block.CollectibleBehaviors.Append(behavior);
                     block.BlockBehaviors = block.BlockBehaviors.Append(behavior);
+
+                    if (block.CropProps != null)
+                    {
+                        block.CropProps.Behaviors = block.CropProps.Behaviors.Append(behavior.transitiveProps);
+                    }
+                    else
+                    {
+                        OriginsLogger.Debug(api, "unable to set block crop behavior!");
+                    }
                 }
             }
 
