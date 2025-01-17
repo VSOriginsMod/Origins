@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 using Origins.Systems;
+using Origins.Systems.Horticulture;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,29 +28,11 @@ namespace Origins.Patches.Behaviors
         static double sigma = Math.ReciprocalEstimate(3.92d);
         static NormalDistribution normalDistribution = GetNormalDistribution(mu, sigma);
 
-        public class TransitiveProps : CropBehavior
-        {
-            internal BlockPos pos = null;
-            internal double mutation = 0.0f;
-            internal ItemStack stack;
-
-            public TransitiveProps(Block block) : base(block)
-            {
-            }
-
-            internal void OnBlockPlaced()
-            {
-
-            }
-        };
-
 
         private double mutation = 1.0d;
-        private TransitiveProps transitiveProps;
 
         public BBTransitiveAttribute(Block block) : base(block)
         {
-            transitiveProps = new TransitiveProps(block);
         }
 
         /// <summary>
@@ -112,7 +95,20 @@ namespace Origins.Patches.Behaviors
 
         public override string GetPlacedBlockInfo(IWorldAccessor world, BlockPos pos, IPlayer forPlayer)
         {
-            return "Mutation Rate: " + world.BlockAccessor.GetBlock(pos).GetBehavior<BBTransitiveAttribute>()?.mutation ?? "unknown";
+            return "Mutation Rate: " + world.Api.ModLoader.GetModSystem<HorticultureSystem>()?.GetAttributes(pos) ?? "unknown";
+        }
+        public override bool OnBlockInteractStart(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, ref EnumHandling handling)
+        {
+            HorticultureSystem hortsys = world.Api.ModLoader.GetModSystem<HorticultureSystem>();
+            if (hortsys == null)
+            {
+                return false;
+            }
+
+            hortsys.SetAttributes(blockSel.Position, byPlayer.InventoryManager.ActiveHotbarSlot.Itemstack.Attributes.GetDouble(attr_list[0]));
+            double foo = hortsys.GetAttributes(blockSel.Position);
+
+            return false;
         }
 
         /// <summary>
@@ -124,8 +120,11 @@ namespace Origins.Patches.Behaviors
         /// <param name="handling"></param>
         public override void OnBlockBroken(IWorldAccessor world, BlockPos pos, IPlayer byPlayer, ref EnumHandling handling)
         {
+
             base.OnBlockBroken(world, pos, byPlayer, ref handling);
 
+            HorticultureSystem hortsys = world.Api.ModLoader.GetModSystem<HorticultureSystem>();
+            mutation = hortsys?.GetAttributes(pos) ?? 1.0d;
             foreach (BlockDropItemStack stack in block.Drops)
             {
                 if (stack.ResolvedItemstack.ItemAttributes.KeyExists(attr_list_name))
@@ -211,7 +210,6 @@ namespace Origins.Patches.Behaviors
                 if (PatchedClasses.Contains(block.Class))
                 {
                     BBTransitiveAttribute behavior = new BBTransitiveAttribute(block);
-                    behavior.transitiveProps = new TransitiveProps(block);
 
                     JsonObject properties = new JsonObject(new JObject());
 
@@ -220,15 +218,6 @@ namespace Origins.Patches.Behaviors
                     // since VSEssentials adds to both, we cannot vary from this practice
                     block.CollectibleBehaviors = block.CollectibleBehaviors.Append(behavior);
                     block.BlockBehaviors = block.BlockBehaviors.Append(behavior);
-
-                    if (block.CropProps != null)
-                    {
-                        block.CropProps.Behaviors = block.CropProps.Behaviors.Append(behavior.transitiveProps);
-                    }
-                    else
-                    {
-                        OriginsLogger.Debug(api, "unable to set block crop behavior!");
-                    }
                 }
             }
 

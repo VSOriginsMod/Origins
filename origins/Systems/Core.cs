@@ -21,7 +21,7 @@ namespace Origins.Systems
     public class OriginsCoreSystem : ModSystem
     {
         public const string Domain = "origins";
-        public const string ModName = "Origins";
+        public const string ModID = "Origins";
         public const string ChannelOriginsCore = "origins-core";
 
 

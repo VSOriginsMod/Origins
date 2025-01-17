@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using HarmonyLib;
+using Newtonsoft.Json.Linq;
 using Origins.Systems;
 using System.Text;
 using Vintagestory.API.Common;
@@ -15,6 +16,7 @@ namespace Origins.Patches.Behaviors
 
         static ICoreAPI api;
         private double mutation = 1.0f;
+        private Harmony patch;
 
         public CBTransitiveAttribute(CollectibleObject collObj) : base(collObj)
         {
@@ -38,21 +40,7 @@ namespace Origins.Patches.Behaviors
             if (properties.KeyExists(attr_list_name)) OriginsLogger.Debug(api, "  attr_list_name: " + collObj.Attributes[attr_list_name]);
             if (properties.KeyExists(attr_list[0])) OriginsLogger.Debug(api, "  " + attr_list[0] + ": " + collObj.Attributes[attr_list[0]]);
 
-            mutation = properties[attr_list[0]].AsDouble();
-
-            // the code until the end of the foreach loop is for making sure collectible objects retain externally defined Attributes
-            // ensures (transitive) attribute list is in collObj's 'Attributes'
-            //collObj.Attributes ??= properties ?? new JsonObject(new JObject());
-
-            //if (!collObj.Attributes.KeyExists(attr_list_name))
-            //{
-            //    collObj.Attributes.Token[attr_list_name] = JToken.FromObject(attr_list);
-            //    foreach (string attrKey in attr_list)
-            //    {
-            //        // needs default init values if none are given by properties
-            //        collObj.Attributes.Token[attrKey] = JToken.FromObject(mutation);
-            //    }
-            //}
+            mutation = properties[attr_list[0]].AsDouble(0.0d);
 
         }
 
@@ -67,7 +55,8 @@ namespace Origins.Patches.Behaviors
 
         public override void OnHeldInteractStart(ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel, bool firstEvent, ref EnumHandHandling handHandling, ref EnumHandling handling)
         {
-            byEntity.Api.Logger.Debug("AAAAAAAAAAAAAAAAAAAAAAAAA");
+            byEntity.Api.Logger.Debug("Interact Start");
+            byEntity.Api.Logger.Debug(slot.Itemstack.GetName());
         }
 
         public override void GetHeldItemInfo(ItemSlot inSlot, StringBuilder dsc, IWorldAccessor world, bool withDebugInfo)
@@ -92,7 +81,7 @@ namespace Origins.Patches.Behaviors
                     continue;
                 }
 
-                if (PatchedClasses.Contains(item.Class))
+                if (item.Code.BeginsWith("game", "seeds"))
                 {
                     CBTransitiveAttribute behavior = new CBTransitiveAttribute(item);
 

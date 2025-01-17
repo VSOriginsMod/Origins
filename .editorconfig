@@ -10,3 +10,6 @@ insert_final_newline = true
 [*.cs]
 indent_style = space
 indent_size = 4
+
+# IDE0090: 'new' expression can be simplified
+csharp_style_implement_object_creation_when_type_is_apparent = false
