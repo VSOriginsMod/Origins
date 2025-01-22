@@ -61,7 +61,7 @@ namespace Origins.Patches
                 {
                     OriginsLogger.Debug(api, "Attempting to apply following code patch: " + patch.Name);
                     patch
-                        .GetMethod("ApplyPatch", new[] { typeof(ICoreAPI) })
+                        .GetMethod("ApplyPatch", new[] { typeof(ICoreAPI) })?
                         .Invoke(null, new object[] { api });
                 }
                 catch (Exception err)

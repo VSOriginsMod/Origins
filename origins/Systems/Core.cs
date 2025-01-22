@@ -95,7 +95,7 @@ namespace Origins.Systems
             // SkillPathsByName = new Dictionary<string, SkillPath>();
             // foreach (SkillPath path in this.SkillPaths)
             // {
-            //     this.SkillPathsByName[path.Name] = path;
+            //     this.SkillPathsByName[path.name] = path;
             // }
             /* IGNORE FOR SAKE OF CLARITY */
 

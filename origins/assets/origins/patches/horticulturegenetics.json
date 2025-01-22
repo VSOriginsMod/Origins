@@ -1,0 +1,42 @@
+[
+  {
+    "file": "game:itemtypes/resource/seeds.json",
+    "op": "addmerge",
+    "path": "/behaviors",
+    "value": [
+      {
+        "name": "CollectibleBehaviorGenetic",
+        "properties": {
+          "genetic_attributes": [
+            {
+              "name": "mutation"
+            },
+            {
+              "name": "yield"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "file": "game:blocktypes/plant/crop/**",
+    "op": "addmerge",
+    "path": "/behaviors",
+    "value": [
+      {
+        "name": "BlockBehaviorGenetic",
+        "properties": {
+          "genetic_attributes": [
+            {
+              "name": "mutation"
+            },
+            {
+              "name": "yield"
+            }
+          ]
+        }
+      }
+    ]
+  }
+]
