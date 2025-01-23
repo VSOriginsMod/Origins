@@ -11,6 +11,11 @@ insert_final_newline = true
 indent_style = space
 indent_size = 4
 
-# IDE0090: 'new' expression can be simplified
+# IDE0090: ignore complicated constructors (for readability)
 csharp_style_implement_object_creation_when_type_is_apparent = false
-dotnet_diagnostic.IDE0090.severity = none
+
+# IDE0160: use file-scope namespace; helps with indentation
+csharp_style_namespace_declarations = file_scoped
+
+# IDE0130: Namespace may not match folder structure
+dotnet_style_namespace_match_folder = false

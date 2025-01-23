@@ -1,5 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
-using Origins.Systems;
+using Origins.Util;
 using System;
 using System.Text;
 using Vintagestory.API.Common;
@@ -8,16 +8,24 @@ using Vintagestory.API.MathTools;
 using Vintagestory.API.Util;
 using Vintagestory.GameContent;
 
-namespace Origins.Patches.Behaviors;
+namespace Origins.GameContent;
 
-internal class BlockBehaviorGenetic : BlockBehavior, ICodePatch
+/// <summary>
+/// WARN(chris): Currently only intended for BlockCrop!
+/// 
+/// Behavior indicating a block has mutable genes to keep track of.
+/// This will be used to transfer data to store genetic data in a corresponding
+///   BlockEntity and slightly mutate that data for propogation when the block
+///   is harvasted.
+/// </summary>
+internal class BlockBehaviorMutableGenes : BlockBehavior, ICodePatch
 {
 
     static readonly string attr_list_name = "genetic_attributes";
     static readonly string[] attr_list = new string[] { "mutation" };
     static readonly Random random = new Random();
 
-    public BlockBehaviorGenetic(Block block) : base(block)
+    public BlockBehaviorMutableGenes(Block block) : base(block)
     {
     }
 
@@ -38,7 +46,7 @@ internal class BlockBehaviorGenetic : BlockBehavior, ICodePatch
     // NOTE(chris): This does NOT run when using seeds
     public override bool DoPlaceBlock(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, ItemStack byItemStack, ref EnumHandling handling)
     {
-        OriginsLogger.Debug(world.Api, "[BlockBehaviorGenetic::DoPlaceBlock] placing {0} at {1}", block.Code, blockSel.Position.ToString());
+        OriginsLogger.Debug(world.Api, "[BlockBehaviorMutableGenes::DoPlaceBlock] placing {0} at {1}", block.Code, blockSel.Position.ToString());
 
         return base.DoPlaceBlock(world, byPlayer, blockSel, byItemStack, ref handling);
     }
@@ -53,7 +61,7 @@ internal class BlockBehaviorGenetic : BlockBehavior, ICodePatch
 
         double attr = world.BlockAccessor.GetBlock(blockPos.DownCopy())?.GetBEBehavior<BEBehaviorFarmlandGeneticData>(blockPos.DownCopy())?.Mutation ?? -1.0d;
 
-        OriginsLogger.Debug(world.Api, "[BlockBehaviorGenetic::OnBlockPlaced] {0} block placed at {1} with attribute {2}",
+        OriginsLogger.Debug(world.Api, "[BlockBehaviorMutableGenes::OnBlockPlaced] {0} block placed at {1} with attribute {2}",
             block.Code, blockPos.ToString(), attr
         );
         base.OnBlockPlaced(world, blockPos, ref handling);
@@ -115,7 +123,9 @@ internal class BlockBehaviorGenetic : BlockBehavior, ICodePatch
     }
 
     [Obsolete]
+#pragma warning disable CS0809 // This is a temporary mute since nobody's working on this yet
     public override string GetPlacedBlockInfo(IWorldAccessor world, BlockPos pos, IPlayer forPlayer)
+#pragma warning restore CS0809 // Obsolete member overrides non-obsolete member
     {
         return "Mutation: " + world.Api.World.BlockAccessor
             .GetBlockEntity<BlockEntityFarmland>(pos.DownCopy())?
@@ -141,7 +151,7 @@ internal class BlockBehaviorGenetic : BlockBehavior, ICodePatch
             //if (block.Code.PathStartsWith("crop"))
             if (block is BlockCrop)
             {
-                BlockBehaviorGenetic behavior = new BlockBehaviorGenetic(block);
+                BlockBehaviorMutableGenes behavior = new BlockBehaviorMutableGenes(block);
 
                 JsonObject properties = new JsonObject(new JObject());
 
@@ -156,8 +166,8 @@ internal class BlockBehaviorGenetic : BlockBehavior, ICodePatch
 
     public static void RegisterPatch(ICoreAPI api)
     {
-        api.RegisterCollectibleBehaviorClass("BlockBehaviorGenetic", typeof(BlockBehaviorGenetic));
-        api.RegisterBlockBehaviorClass("BlockBehaviorGenetic", typeof(BlockBehaviorGenetic));
+        api.RegisterCollectibleBehaviorClass("BlockBehaviorMutableGenes", typeof(BlockBehaviorMutableGenes));
+        api.RegisterBlockBehaviorClass("BlockBehaviorMutableGenes", typeof(BlockBehaviorMutableGenes));
     }
     #endregion
 

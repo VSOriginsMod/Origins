@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Origins.Util;
+using System;
 using System.Linq;
 using System.Text;
 using Vintagestory.API.Common;
@@ -6,7 +7,7 @@ using Vintagestory.API.Datastructures;
 using Vintagestory.API.Util;
 using Vintagestory.GameContent;
 
-namespace Origins.Patches.Behaviors;
+namespace Origins.GameContent;
 
 internal class BEBehaviorFarmlandGeneticData : BlockEntityBehavior, ICodePatch
 {

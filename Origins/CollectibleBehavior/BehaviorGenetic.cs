@@ -1,11 +1,11 @@
 ﻿using Newtonsoft.Json.Linq;
+using Origins.Util;
 using System.Text;
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.Util;
-using Vintagestory.GameContent;
 
-namespace Origins.Patches.Behaviors;
+namespace Origins.GameContent;
 
 internal class CollectibleBehaviorGenetic : CollectibleBehavior, ICodePatch
 {
@@ -23,8 +23,6 @@ internal class CollectibleBehaviorGenetic : CollectibleBehavior, ICodePatch
     public override void Initialize(JsonObject properties)
     {
         base.Initialize(properties);
-
-        ItemPlantableSeed seed;
 
         collObj.Attributes ??= properties ?? new JsonObject(new JObject());
 

@@ -1,4 +1,5 @@
-﻿using Origins.Gui;
+﻿using Origins.GameContent;
+using Origins.Util;
 using System.Collections.Generic;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -17,7 +18,7 @@ namespace Origins.Systems.Character
 
         public override double ExecuteOrder()
         {
-            return base.ExecuteOrder();
+            return 0.11d;
         }
 
         public override bool ShouldLoad(EnumAppSide forSide)
