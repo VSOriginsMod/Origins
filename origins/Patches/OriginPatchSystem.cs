@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Vintagestory.API.Common;
-using Vintagestory.API.Server;
 
 namespace Origins.Patches
 {
@@ -20,7 +19,6 @@ namespace Origins.Patches
 
 
         private ICoreAPI api;
-        private ICoreServerAPI sapi;
 
         public override void Start(ICoreAPI api)
         {

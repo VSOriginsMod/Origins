@@ -128,6 +128,11 @@ namespace Origins.Systems
             api.Logger.Debug(Identifier + message);
         }
 
+        internal static void Debug(ICoreAPI api, string format, params object[] args)
+        {
+            api.Logger.Debug(Identifier + format, args);
+        }
+
         internal static void Error(ICoreAPI api, Exception err)
         {
             api.Logger.Error(err);
