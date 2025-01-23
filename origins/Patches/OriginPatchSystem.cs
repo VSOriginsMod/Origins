@@ -12,10 +12,10 @@ namespace Origins.Patches
         /// <summary>
         /// For conveniently iterating over all classes implementing ICodePatch in order to preform code patches.
         /// </summary>
-        private static readonly IEnumerable<Type> patchTypes = Assembly
+        private static readonly IEnumerable<Type> patches = Assembly
             .GetExecutingAssembly()
             .GetTypes()
-            .Where(t => null != t.GetInterface("ICodePatch"));
+            .Where(t => null != t.GetInterface("IPatch"));
 
 
         private ICoreAPI api;
@@ -24,9 +24,9 @@ namespace Origins.Patches
         {
             this.api = api;
 
-            OriginsLogger.Debug(api, "[OriginPatchSystem] Registering " + patchTypes.ToList().Count + " patches");
+            OriginsLogger.Debug(api, "[OriginPatchSystem] Registering " + patches.ToList().Count + " patches");
 
-            foreach (var patch in patchTypes)
+            foreach (var patch in patches)
             {
                 try
                 {
@@ -53,12 +53,13 @@ namespace Origins.Patches
                 return;
             }
 
-            foreach (var patch in patchTypes)
+            foreach (var patch in patches)
             {
                 try
                 {
                     OriginsLogger.Debug(api, "Attempting to apply following code patch: " + patch.Name);
                     patch
+                        .GetInterface("ICodePatch")?
                         .GetMethod("ApplyPatch", new[] { typeof(ICoreAPI) })
                         .Invoke(null, new object[] { api });
                 }

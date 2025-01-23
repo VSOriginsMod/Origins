@@ -1,12 +1,12 @@
-﻿using Origins.Patches;
-using Origins.Systems;
-using System;
+﻿using System;
 using System.Linq;
 using System.Text;
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.Util;
 using Vintagestory.GameContent;
+
+namespace Origins.Patches.Behaviors;
 
 internal class BEBehaviorFarmlandGeneticData : BlockEntityBehavior, ICodePatch
 {
@@ -22,7 +22,6 @@ internal class BEBehaviorFarmlandGeneticData : BlockEntityBehavior, ICodePatch
         {
             mutation = value;
             Blockentity.MarkDirty();
-            OriginsLogger.Debug(Api, "[BEBehaviorFarmlandGeneticData] setting mutation to {0}", mutation);
         }
     }
 
