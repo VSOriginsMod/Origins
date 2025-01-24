@@ -1,16 +1,21 @@
 ﻿using Newtonsoft.Json.Linq;
 using Origins.Util;
+using System;
 using System.Text;
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
-using Vintagestory.API.Util;
 
 namespace Origins.GameContent;
 
-internal class CollectibleBehaviorGenetic : CollectibleBehavior, ICodePatch
+internal class CollectibleBehaviorGenetic : CollectibleBehavior, IPatch
 {
-    static readonly string attr_list_name = "genetic_attributes";
-    static readonly string[] attr_list = new string[] { "mutation" };
+    static readonly string AttributeName = "genes";
+
+    /// <summary>
+    /// elements hold gene name as first key and default value as first key's value
+    /// </summary>
+    // NOTE(chris): this may be redunant, I just want to make sure default values exist
+    private TreeAttribute[] genes;
 
     public CollectibleBehaviorGenetic(CollectibleObject collObj) : base(collObj)
     {
@@ -22,50 +27,42 @@ internal class CollectibleBehaviorGenetic : CollectibleBehavior, ICodePatch
     /// <param name="properties">will only have values when JSON patches apply this behavior</param>
     public override void Initialize(JsonObject properties)
     {
+        collObj.Attributes ??= new JsonObject(new JObject());
+
         base.Initialize(properties);
 
-        collObj.Attributes ??= properties ?? new JsonObject(new JObject());
+        var genes = properties[AttributeName].ToAttribute();
 
-        // BUG(chris): not setting anything here
-        //     probably should set attribute list in here
+        if (!genes.GetType().IsEquivalentTo(typeof(TreeArrayAttribute)))
+        {
+            throw new ContextMarshalException(
+                "Unable to parse TreeArrayAttribute from 'properties.genes'; 'genes' must be an array!",
+                new FormatException(propertiesAtString)
+            );
+        }
+
+        collObj.Attributes.Token[AttributeName] = properties.Token[AttributeName];
+        this.genes = (TreeAttribute[])genes.GetValue();
     }
 
     public override void GetHeldItemInfo(ItemSlot inSlot, StringBuilder dsc, IWorldAccessor world, bool withDebugInfo)
     {
         base.GetHeldItemInfo(inSlot, dsc, world, withDebugInfo);
-        dsc.AppendLine("Mutation Rate: " + inSlot.Itemstack.Attributes[attr_list[0]]);
-    }
 
-    public static void ApplyPatch(ICoreAPI api)
-    {
-        if (api.Side != EnumAppSide.Server)
+        if (genes == null)
         {
             return;
         }
 
-        foreach (CollectibleObject item in api.World.Collectibles)
+        foreach (var attr in genes)
         {
-            // first two are necessary to make sure it exists, third is for a robust method of filtering
-            if (item == null || item.Code == null || item.Class == null)
-            {
-                continue;
-            }
-
-            if (item.Code.BeginsWith("game", "seeds"))
-            {
-                CollectibleBehaviorGenetic behavior = new CollectibleBehaviorGenetic(item);
-
-                // Just in case we're going first
-                item.Attributes ??= new JsonObject(new JObject());
-
-                // We just need the list so we can check ItemStack::ItemAttributes later
-                item.Attributes.Token[attr_list_name] = JToken.FromObject(attr_list);
-
-                // In code mods, this needs to be called manually
-                behavior.Initialize(item.Attributes);
-
-                item.CollectibleBehaviors = item.CollectibleBehaviors.Append(behavior);
-            }
+            dsc.AppendLine(
+                string.Format(
+                    "{0}: {1}",
+                    attr.Keys[0],
+                    inSlot.Itemstack.Attributes.GetDouble(attr.Keys[0])
+                )
+            );
         }
     }
 

@@ -1,11 +1,9 @@
-﻿using Newtonsoft.Json.Linq;
-using Origins.Util;
+﻿using Origins.Util;
 using System;
 using System.Text;
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
-using Vintagestory.API.Util;
 using Vintagestory.GameContent;
 
 namespace Origins.GameContent;
@@ -18,12 +16,16 @@ namespace Origins.GameContent;
 ///   BlockEntity and slightly mutate that data for propogation when the block
 ///   is harvasted.
 /// </summary>
-internal class BlockBehaviorMutableGenes : BlockBehavior, ICodePatch
+internal class BlockBehaviorMutableGenes : BlockBehavior, IPatch
 {
-
-    static readonly string attr_list_name = "genetic_attributes";
-    static readonly string[] attr_list = new string[] { "mutation" };
+    static readonly string AttributeName = "genes";
     static readonly Random random = new Random();
+
+    /// <summary>
+    /// elements hold gene name as first key and default value as first key's value
+    /// </summary>
+    // NOTE(chris): this may be redunant, I just want to make sure default values exist
+    private TreeAttribute[] genes;
 
     public BlockBehaviorMutableGenes(Block block) : base(block)
     {
@@ -35,12 +37,25 @@ internal class BlockBehaviorMutableGenes : BlockBehavior, ICodePatch
     /// <param name="properties">will only have values when JSON patches apply this behavior</param>
     public override void Initialize(JsonObject properties)
     {
+        if (null == block.Attributes)
+        {
+            return;
+        }
+
         base.Initialize(properties);
 
-        // the code until the end of the foreach loop is for making sure collectible objects retain externally defined Attributes
-        // ensures (transitive) attribute list is in block's 'Attributes'
-        block.Attributes ??= properties ?? new JsonObject(new JObject());
-        block.Attributes.Token[attr_list_name] ??= JToken.FromObject(attr_list);
+        var genes = properties[AttributeName].ToAttribute();
+
+        if (!genes.GetType().IsEquivalentTo(typeof(TreeArrayAttribute)))
+        {
+            throw new ContextMarshalException(
+                "Unable to parse TreeArrayAttribute from 'properties.genes'; 'genes' must be an array!",
+                new FormatException(propertiesAtString)
+            );
+        }
+
+        block.Attributes.Token[AttributeName] = properties.Token[AttributeName];
+        this.genes = (TreeAttribute[])genes.GetValue();
     }
 
     // NOTE(chris): This does NOT run when using seeds
@@ -54,29 +69,15 @@ internal class BlockBehaviorMutableGenes : BlockBehavior, ICodePatch
     // NOTE(chris): This _does_ run when using seeds
     public override void OnBlockPlaced(IWorldAccessor world, BlockPos blockPos, ref EnumHandling handling)
     {
-        //if (world.Api.Side == EnumAppSide.Client)
-        //{
-        //    return;
-        //}
-
-        double attr = world.BlockAccessor.GetBlock(blockPos.DownCopy())?.GetBEBehavior<BEBehaviorFarmlandGeneticData>(blockPos.DownCopy())?.Mutation ?? -1.0d;
+        double attr = world.BlockAccessor
+            .GetBlock(blockPos.DownCopy())?
+            .GetBEBehavior<BEBehaviorFarmlandGeneticData>(blockPos.DownCopy())?
+            .Mutation ?? -100;
 
         OriginsLogger.Debug(world.Api, "[BlockBehaviorMutableGenes::OnBlockPlaced] {0} block placed at {1} with attribute {2}",
             block.Code, blockPos.ToString(), attr
         );
         base.OnBlockPlaced(world, blockPos, ref handling);
-    }
-
-    public override ItemStack OnPickBlock(IWorldAccessor world, BlockPos pos, ref EnumHandling handling)
-    {
-        handling = EnumHandling.Handled;
-        ItemStack stack = new ItemStack(block);
-        var val = world.BlockAccessor.GetBlock(pos)?.GetBEBehavior<BEBehaviorFarmlandGeneticData>(pos.DownCopy())?.Mutation ?? -1.0d;
-
-        stack.StackSize = 1;
-        stack.Attributes.SetDouble("mutation", val);
-
-        return stack;
     }
 
     /// <summary>
@@ -88,12 +89,6 @@ internal class BlockBehaviorMutableGenes : BlockBehavior, ICodePatch
     /// <param name="handling"></param>
     public override void OnBlockBroken(IWorldAccessor world, BlockPos pos, IPlayer byPlayer, ref EnumHandling handling)
     {
-        //if (world.Api.Side == EnumAppSide.Client)
-        //{
-        //    return;
-        //}
-
-
         BlockEntityFarmland farmland = world.Api.World.BlockAccessor.GetBlockEntity<BlockEntityFarmland>(pos.DownCopy());
         if (farmland == null)
         {
@@ -105,7 +100,7 @@ internal class BlockBehaviorMutableGenes : BlockBehavior, ICodePatch
         foreach (BlockDropItemStack stack in block.Drops)
         {
             var resolvedStack = stack.ResolvedItemstack;
-            if (resolvedStack.ItemAttributes.KeyExists(attr_list_name))
+            if (null != resolvedStack.ItemAttributes && resolvedStack.ItemAttributes.KeyExists(AttributeName))
             {
                 resolvedStack.Attributes.SetDouble("mutation", geneticData + Mutation());
             }
@@ -119,48 +114,21 @@ internal class BlockBehaviorMutableGenes : BlockBehavior, ICodePatch
     public override void GetHeldItemInfo(ItemSlot inSlot, StringBuilder dsc, IWorldAccessor world, bool withDebugInfo)
     {
         base.GetHeldItemInfo(inSlot, dsc, world, withDebugInfo);
-        dsc.AppendLine("Mutation: " + inSlot.Itemstack.Attributes.GetDouble(attr_list[0]));
-    }
 
-    [Obsolete]
-#pragma warning disable CS0809 // This is a temporary mute since nobody's working on this yet
-    public override string GetPlacedBlockInfo(IWorldAccessor world, BlockPos pos, IPlayer forPlayer)
-#pragma warning restore CS0809 // Obsolete member overrides non-obsolete member
-    {
-        return "Mutation: " + world.Api.World.BlockAccessor
-            .GetBlockEntity<BlockEntityFarmland>(pos.DownCopy())?
-            .GetBehavior<BEBehaviorFarmlandGeneticData>()?.Mutation ?? "Unknown";
-    }
-
-    #region ICodePatch
-    public static void ApplyPatch(ICoreAPI api)
-    {
-        if (api.Side != EnumAppSide.Server)
+        if (genes == null)
         {
             return;
         }
 
-        foreach (Block block in api.World.Blocks)
+        foreach (var attr in genes)
         {
-            // first two are necessary to make sure it exists, third is for a robust method of filtering
-            if (block == null || block.Code == null || block.Class == null)
-            {
-                continue;
-            }
-
-            //if (block.Code.PathStartsWith("crop"))
-            if (block is BlockCrop)
-            {
-                BlockBehaviorMutableGenes behavior = new BlockBehaviorMutableGenes(block);
-
-                JsonObject properties = new JsonObject(new JObject());
-
-                behavior.Initialize(properties);
-
-                // since VSEssentials adds to both, we cannot vary from this practice
-                block.CollectibleBehaviors = block.CollectibleBehaviors.Append(behavior);
-                block.BlockBehaviors = block.BlockBehaviors.Append(behavior);
-            }
+            dsc.AppendLine(
+                string.Format(
+                    "{0}: {1}",
+                    attr.Keys[0],
+                    inSlot.Itemstack.Attributes.GetDouble(attr.Keys[0])
+                )
+            );
         }
     }
 
@@ -169,7 +137,6 @@ internal class BlockBehaviorMutableGenes : BlockBehavior, ICodePatch
         api.RegisterCollectibleBehaviorClass("BlockBehaviorMutableGenes", typeof(BlockBehaviorMutableGenes));
         api.RegisterBlockBehaviorClass("BlockBehaviorMutableGenes", typeof(BlockBehaviorMutableGenes));
     }
-    #endregion
 
     private static double Mutation()
     {

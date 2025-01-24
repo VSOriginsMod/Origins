@@ -28,7 +28,7 @@ internal class PatchInjection : ModSystem
             t => !t.IsInterface && t
                 .GetInterfaces()
                 .Intersect(new Type[2] { typeof(IPatch), typeof(ICodePatch) })
-                .Any(y => null != y.GetInterface("IPatch"))
+                .Any()
         );
 
     public override void Start(ICoreAPI api)

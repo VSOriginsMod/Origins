@@ -11,11 +11,15 @@ namespace Origins.GameContent;
 
 internal class BEBehaviorFarmlandGeneticData : BlockEntityBehavior, ICodePatch
 {
-    static readonly string attr_list_name = "genetic_attributes";
-    static readonly string[] attr_list = new string[] { "mutation" };
-
+    /// <summary>
+    /// Only a double right now because it needs to remain synchronized.
+    /// </summary>
+    /// Ideally this should be a SyncedTreeAttribute.
     private double mutation;
 
+    /// <summary>
+    /// Synchronized
+    /// </summary>
     internal double Mutation
     {
         get => mutation;
@@ -43,7 +47,6 @@ internal class BEBehaviorFarmlandGeneticData : BlockEntityBehavior, ICodePatch
     public override void ToTreeAttributes(ITreeAttribute tree)
     {
         base.ToTreeAttributes(tree);
-        //double geneticData = Api.ModLoader.GetModSystem<HorticultureSystem>()?.GetAttributes(Pos.UpCopy()) ?? 0.0d;
         tree.SetDouble("mutation", mutation);
     }
 
@@ -53,6 +56,7 @@ internal class BEBehaviorFarmlandGeneticData : BlockEntityBehavior, ICodePatch
         mutation = tree.GetDouble("mutation");
     }
 
+    #region ICodePatch
     public static void ApplyPatch(ICoreAPI api)
     {
         foreach (var block in api.World.Blocks)
@@ -76,4 +80,5 @@ internal class BEBehaviorFarmlandGeneticData : BlockEntityBehavior, ICodePatch
     {
         api.RegisterBlockEntityBehaviorClass("BEBehaviorFarmlandGeneticData", typeof(BEBehaviorFarmlandGeneticData));
     }
+    #endregion
 }
