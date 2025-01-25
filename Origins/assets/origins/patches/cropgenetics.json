@@ -1,0 +1,56 @@
+[
+  {
+    "file": "game:blocktypes/soil/farmland.json",
+    "op": "addmerge",
+    "path": "/behaviors",
+    "value": [
+      {
+        "name": "BlockBehaviorShowBEBlockInfo"
+      }
+    ]
+  },
+  {
+    "file": "game:blocktypes/soil/farmland.json",
+    "op": "addmerge",
+    "path": "/entityBehaviors",
+    "value": [
+      {
+        "name": "BEBehaviorFarmlandGeneticData"
+      }
+    ]
+  },
+  {
+    "file": "game:blocktypes/plant/crop/**",
+    "op": "addmerge",
+    "path": "/behaviors",
+    "value": [
+      {
+        "name": "BlockBehaviorMutableGenes",
+        "properties": {
+          "genes": {
+            "mutation": {
+              "default": 0.0
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "file": "game:itemtypes/resource/seeds.json",
+    "op": "addmerge",
+    "path": "/behaviors",
+    "value": [
+      {
+        "name": "CollectibleBehaviorGenetic",
+        "properties": {
+          "genes": {
+            "mutation": {
+              "default": 0.0
+            }
+          }
+        }
+      }
+    ]
+  }
+]

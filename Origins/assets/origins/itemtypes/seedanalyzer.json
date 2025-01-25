@@ -1,0 +1,8 @@
+{
+	"code": "magic",
+	"class": "ItemSeedAnalyzer",
+	"texture": { 
+		"base": "item/magicwand"
+	},
+	"creativeinventory": { "general": ["*"], "items": ["*"] }
+}

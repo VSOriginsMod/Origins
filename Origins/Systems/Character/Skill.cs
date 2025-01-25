@@ -1,13 +1,12 @@
-﻿using Origins.Config;
-using System;
+﻿using Origins.GameContent;
+using Origins.Util;
 using System.Collections.Generic;
-using System.IO;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.Server;
 
-namespace Origins.Character
+namespace Origins.Systems.Character
 {
     internal class SkillSystem : ModSystem
     {
@@ -15,11 +14,11 @@ namespace Origins.Character
         public static List<Skill> Elements;
         public List<Skill> Skills;
 
-        private PlayerSkillsUI PlayerSkillsUI;
+        private GuiDialogSkills PlayerSkillsUI;
 
         public override double ExecuteOrder()
         {
-            return base.ExecuteOrder();
+            return 0.11d;
         }
 
         public override bool ShouldLoad(EnumAppSide forSide)
@@ -35,9 +34,9 @@ namespace Origins.Character
         {
             //Note(Moon):
             //these lines are what's needed in order to turn the dialog box, the initialization
-            //of the PlayerSkillsUI can be moved to a seprate class and likely will be at a later date.
+            //of the GuiDialogSkills can be moved to a seprate class and likely will be at a later date.
             //It just needs the capi in order to be be hooked for the hotkey.
-            PlayerSkillsUI = new PlayerSkillsUI(api);
+            PlayerSkillsUI = new GuiDialogSkills(api);
             api.Input.RegisterHotKey(
                 "Skill Interface",
                 "Opens up the Skills GUI",
@@ -51,7 +50,7 @@ namespace Origins.Character
         {
             Skills = api.Assets.Get("origins:config/skills.json").ToObject<List<Skill>>(null);
             Elements = Skills;
-            ModLogging.Debug(api, "Skills loaded");
+            OriginsLogger.Debug(api, "Skills loaded");
         }
 
         public bool ToggleGUI(KeyCombination comb)
@@ -109,6 +108,28 @@ namespace Origins.Character
                 api.World.PlayerByUid(playerUid) as IServerPlayer,
                 SkillName);
         }
+
+        /// <summary>
+        /// Increment skill by 1
+        /// </summary>
+        /// 
+        /// <remarks>
+        /// This must be called server side!
+        /// </remarks>
+        /// 
+        /// <param name="player"></param>
+        /// <param name="SkillName"></param>
+        /// <returns></returns>
+        public static float IncrementSkill(IPlayer player, string SkillName)
+        {
+            SkillName = "s_" + SkillName;
+            var skillExp = player.Entity.WatchedAttributes.GetFloat(SkillName);
+            skillExp += 1;
+            player.Entity.WatchedAttributes.SetFloat(SkillName, skillExp);
+            return skillExp;
+        }
+
+
     }
 
     public class SkillSet : ArrayAttribute<Skill>

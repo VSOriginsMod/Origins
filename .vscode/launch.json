@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch Client (Debug)",
+            "name": "Launch Dev World (Debug)",
             "type": "coreclr",
             "request": "launch",
             "program": "${env:VINTAGE_STORY}/Vintagestory.exe",
@@ -17,11 +17,35 @@
             },
             "preLaunchTask": "build",
             "args": [
-                // "--playStyle" , "preset-surviveandbuild",
-                // "--openWorld" , "modding test world",
+                "--playStyle" , "creativebuilding",
+                "--openWorld" , "modding test world",
                 "--tracelog",
+                "--logPath", "${workspaceFolder}/logs"
                 "--addModPath",
-                "${workspaceFolder}/rpskills/bin/Debug/Mods"
+                "${workspaceFolder}/Origins/bin/Debug/Mods"
+            ],
+            "console": "internalConsole",
+            "stopAtEntry": false
+        },
+        {
+            "name": "Launch New World (Debug)",
+            "type": "coreclr",
+            "request": "launch",
+            "program": "${env:VINTAGE_STORY}/Vintagestory.exe",
+            "linux": {
+                "program": "${env:VINTAGE_STORY}/Vintagestory"
+            },
+            "osx": {
+                "program": "${env:VINTAGE_STORY}/Vintagestory"
+            },
+            "preLaunchTask": "build",
+            "args": [
+                "--playStyle" , "creativebuilding",
+                "--rndWorld"
+                "--tracelog",
+                "--logPath", "${workspaceFolder}/logs"
+                "--addModPath",
+                "${workspaceFolder}/Origins/bin/Debug/Mods"
             ],
             "console": "internalConsole",
             "stopAtEntry": false
@@ -41,7 +65,7 @@
             "args": [
                 "--tracelog",
                 "--addModPath",
-                "${workspaceFolder}/rpskills/bin/Debug/Mods"
+                "${workspaceFolder}/Origins/bin/Debug/Mods"
             ],
             "console": "internalConsole",
             "stopAtEntry": false

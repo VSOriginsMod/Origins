@@ -1,4 +1,5 @@
-﻿using Origins.Config;
+﻿using Origins.GameContent;
+using Origins.Util;
 using ProtoBuf;
 using System;
 using System.Collections.Generic;
@@ -7,7 +8,7 @@ using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 using Vintagestory.API.Util;
 
-namespace Origins.Character
+namespace Origins.Systems.Character
 {
     class OriginSelectionState
     {
@@ -50,7 +51,7 @@ namespace Origins.Character
 
         public override double ExecuteOrder()
         {
-            return base.ExecuteOrder();
+            return 0.11d;
         }
 
         public override bool ShouldLoad(EnumAppSide forSide)
@@ -62,15 +63,15 @@ namespace Origins.Character
         {
             this.api = api;
 
-            api.Network.GetChannel(ModConstants.ChannelOriginsCore)
+            api.Network.GetChannel(OriginsCoreSystem.ChannelOriginsCore)
                 .RegisterMessageType<OriginSelectionPacket>()
                 .RegisterMessageType<OriginSelectionState>();
         }
 
         public override void StartClientSide(ICoreClientAPI api)
         {
-            api.Network.GetChannel(ModConstants.ChannelOriginsCore)
-                    .SetMessageHandler<OriginSelectionState>(
+            api.Network.GetChannel(OriginsCoreSystem.ChannelOriginsCore)
+                    .SetMessageHandler(
                         new NetworkServerMessageHandler<OriginSelectionState>(
                             CHandle_OriginSelected
                     ));
@@ -83,8 +84,8 @@ namespace Origins.Character
         {
             // NOTE(chris): this big block tells the server how to reply to
             //              incoming packets with respect to origin selection
-            api.Network.GetChannel(ModConstants.ChannelOriginsCore)
-                .SetMessageHandler<OriginSelectionPacket>(
+            api.Network.GetChannel(OriginsCoreSystem.ChannelOriginsCore)
+                .SetMessageHandler(
                     new NetworkClientMessageHandler<OriginSelectionPacket>(
                         SHandle_OriginSelected
                 ));
@@ -95,7 +96,7 @@ namespace Origins.Character
 
         public override void AssetsLoaded(ICoreAPI api)
         {
-            ModLogging.Debug(api, "Origins loaded");
+            OriginsLogger.Debug(api, "Origins loaded");
         }
 
         public override void AssetsFinalize(ICoreAPI api)
@@ -106,7 +107,7 @@ namespace Origins.Character
 
         public void CHandle_OriginSelected(OriginSelectionState server_state)
         {
-            this.OriginSelected = server_state.HasSelected;
+            OriginSelected = server_state.HasSelected;
         }
 
         /// <summary>
@@ -118,7 +119,7 @@ namespace Origins.Character
         /// <exception cref="NotImplementedException">You Should Not See This in dev</exception>
         private void SHandle_OriginSelected(IServerPlayer fromPlayer, OriginSelectionPacket packet)
         {
-            bool RemembersOriginSelection = SerializerUtil.Deserialize<bool>(
+            bool RemembersOriginSelection = SerializerUtil.Deserialize(
                 fromPlayer.GetModdata("OriginSelected"), false
             );
 
@@ -137,7 +138,7 @@ namespace Origins.Character
             {
                 fromPlayer.SetModdata(
                     "OriginSelected",
-                    SerializerUtil.Serialize<bool>(packet.DidSelect)
+                    SerializerUtil.Serialize(packet.DidSelect)
                 );
 
                 //NOTE(chris): the following list is pulled from
@@ -145,8 +146,8 @@ namespace Origins.Character
                 //impl "Origin"s and "Skills", etc.
 
                 fromPlayer.WorldData.EntityPlayer.WatchedAttributes.SetString("Origin", packet.OriginName);
-                SkillSystem instance = (SkillSystem) api.ModLoader.GetModSystem("Origins.Character.SkillSystem");
-                instance.InitializePlayer(fromPlayer);
+                SkillSystem instance = (SkillSystem)api.ModLoader.GetModSystem("Origins.Systems.Character.SkillSystem");
+                instance?.InitializePlayer(fromPlayer);
 
                 api.Logger.Debug("Initializing player skill data for " + fromPlayer.PlayerName);
 
@@ -223,10 +224,10 @@ namespace Origins.Character
                 OriginName = "average",
             };
 
-            capi.Network.GetChannel(ModConstants.ChannelOriginsCore)
+            capi.Network.GetChannel(OriginsCoreSystem.ChannelOriginsCore)
                 .SendPacket(p);
 
-            
+
             capi.Network.SendPlayerNowReady();
 
             guiStuff_OnClose.Invoke();
@@ -242,7 +243,7 @@ namespace Origins.Character
             // WARN(chris): we are using Moddata(createCharacter) as a
             //              placeholder for now -- functionality is tied to
             //              VintageStory.GameContent.CharacterSystem
-            OriginSelected = SerializerUtil.Deserialize<bool>(
+            OriginSelected = SerializerUtil.Deserialize(
                 byPlayer.GetModdata("OriginSelected"), false
             );
 
@@ -256,7 +257,7 @@ namespace Origins.Character
             }
 
             // tell byPlayer's client their game state
-            (api as ICoreServerAPI).Network.GetChannel(ModConstants.ChannelOriginsCore)
+            (api as ICoreServerAPI).Network.GetChannel(OriginsCoreSystem.ChannelOriginsCore)
                 .SendPacket(
                     new OriginSelectionState
                     {

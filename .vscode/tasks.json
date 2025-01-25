@@ -2,14 +2,40 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "clean",
+            "group": "build",
+            "command": "rm",
+            "type": "shell",
+            "windows": {
+                "command": "Remove-Item",
+                "args": [
+                    "-Recurse",
+                    "-Path",
+                    "Releases,logs,Origins/bin,Origins/obj",
+                    "-ErrorAction",
+                    "Ignore"
+                    // "SilentlyContinue"
+                ],
+            },
+            "args": [
+                "-r",
+                "./Releases",
+                "./logs",
+                "./Origins/bin",
+                "./Origins/obj",
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
             "label": "build",
+            "group": "build",
             "command": "dotnet",
             "type": "process",
             "args": [
                 "build",
                 "-c",
                 "Debug",
-                "${workspaceFolder}/rpskills/rpskills.csproj"
+                "${workspaceFolder}/Origins/Origins.csproj"
             ],
             "problemMatcher": "$msCompile"
         },

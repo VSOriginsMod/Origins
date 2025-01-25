@@ -1,0 +1,27 @@
+# top-most EditorConfig file
+root = true
+
+# Unix-style newlines with a newline ending every file
+[*]
+end_of_line = crlf
+insert_final_newline = true
+
+# 4 space indentation
+[*.cs]
+indent_style = space
+indent_size = 4
+
+# IDE0040: requre accessibility modifiers
+dotnet_style_require_accessibility_modifiers = for_non_interface_members
+
+# IDE0090: ignore complicated constructors (for readability; C# 9.0+)
+csharp_style_implement_object_creation_when_type_is_apparent = false
+
+# IDE0160: use file-scope namespace; helps with indentation
+csharp_style_namespace_declarations = file_scoped
+
+# IDE0130: Namespace may not match folder structure
+dotnet_style_namespace_match_folder = false
+
+# IDE0040: Add accessibility modifiers
+dotnet_style_require_accessibility_modifiers = always
