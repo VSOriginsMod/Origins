@@ -12,10 +12,13 @@ internal class CollectibleBehaviorGenetic : CollectibleBehavior, IPatch
     static readonly string AttributeName = "genes";
 
     /// <summary>
-    /// elements hold gene name as first key and default value as first key's value
+    /// Keys hold gene names that map to Values of TreeAttribute with "default"
+    /// keys containing default values.
     /// </summary>
     // NOTE(chris): this may be redunant, I just want to make sure default values exist
-    private TreeAttribute[] genes;
+    private TreeAttribute genes;
+
+    public TreeAttribute Genes { get => genes; set => genes = value; }
 
     public CollectibleBehaviorGenetic(CollectibleObject collObj) : base(collObj)
     {
@@ -33,7 +36,7 @@ internal class CollectibleBehaviorGenetic : CollectibleBehavior, IPatch
 
         var genes = properties[AttributeName].ToAttribute();
 
-        if (!genes.GetType().IsEquivalentTo(typeof(TreeArrayAttribute)))
+        if (!genes.GetType().IsEquivalentTo(typeof(TreeAttribute)))
         {
             throw new ContextMarshalException(
                 "Unable to parse TreeArrayAttribute from 'properties.genes'; 'genes' must be an array!",
@@ -42,7 +45,7 @@ internal class CollectibleBehaviorGenetic : CollectibleBehavior, IPatch
         }
 
         collObj.Attributes.Token[AttributeName] = properties.Token[AttributeName];
-        this.genes = (TreeAttribute[])genes.GetValue();
+        this.genes = (TreeAttribute)genes.GetValue();
     }
 
     public override void GetHeldItemInfo(ItemSlot inSlot, StringBuilder dsc, IWorldAccessor world, bool withDebugInfo)
@@ -54,13 +57,33 @@ internal class CollectibleBehaviorGenetic : CollectibleBehavior, IPatch
             return;
         }
 
-        foreach (var attr in genes)
+        var attrs = inSlot.Itemstack.Attributes;
+        var stackGenes = attrs.GetTreeAttribute(AttributeName);
+
+        // use default vals if stack not instantiated
+        if (null == stackGenes)
         {
+            attrs = (TreeAttribute)inSlot.Itemstack.ItemAttributes.ToAttribute();
+            stackGenes = attrs.GetTreeAttribute(AttributeName);
+        }
+
+        foreach (var attrKey in genes.Keys)
+        {
+            var stackGene = stackGenes.GetTreeAttribute(attrKey);
+            double attrVal = -128;
+            if (stackGene.HasAttribute("value"))
+            {
+                attrVal = stackGene.GetDouble("value");
+            }
+            else if (stackGene.HasAttribute("default"))
+            {
+                attrVal = stackGene.GetDouble("default");
+            }
+
             dsc.AppendLine(
                 string.Format(
                     "{0}: {1}",
-                    attr.Keys[0],
-                    inSlot.Itemstack.Attributes.GetDouble(attr.Keys[0])
+                    attrKey, Math.Round(attrVal, 2)
                 )
             );
         }

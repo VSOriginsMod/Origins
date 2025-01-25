@@ -1,16 +1,18 @@
 ﻿using Origins.Util;
 using System;
-using System.Linq;
 using System.Text;
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
-using Vintagestory.API.Util;
 using Vintagestory.GameContent;
 
 namespace Origins.GameContent;
 
-internal class BEBehaviorFarmlandGeneticData : BlockEntityBehavior, ICodePatch
+internal class BEBehaviorFarmlandGeneticData : BlockEntityBehavior, IPatch
 {
+    static readonly string AttributeName = "genes";
+    static readonly Random random = new Random();
+
+
     /// <summary>
     /// Only a double right now because it needs to remain synchronized.
     /// </summary>
@@ -30,6 +32,18 @@ internal class BEBehaviorFarmlandGeneticData : BlockEntityBehavior, ICodePatch
         }
     }
 
+    /// <summary>
+    /// Assumed to only hold DoubleAttributes
+    /// </summary>
+    /// This is assumed in ToTreeAttributes & FromTreeAttributes.
+    /// It is also assumed at every reference.
+    internal SyncedTreeAttribute Genes;
+
+    /// <summary>
+    /// redundant because the only thing in Genes is what the crop puts in there
+    /// </summary>
+    internal BlockCrop crop;
+
     public BEBehaviorFarmlandGeneticData(BlockEntity blockentity) : base(blockentity)
     {
     }
@@ -46,39 +60,75 @@ internal class BEBehaviorFarmlandGeneticData : BlockEntityBehavior, ICodePatch
 
     public override void ToTreeAttributes(ITreeAttribute tree)
     {
-        base.ToTreeAttributes(tree);
         tree.SetDouble("mutation", mutation);
+
+        if (null == crop)
+        {
+            return;
+        }
+
+        // NOTE(chris): use until unexpected behavior
+        //     should be an attribute tree full of TreeAttributes
+        //     each TreeAttribute should have a default
+        tree.GetOrAddTreeAttribute(AttributeName).MergeTree(Genes);
     }
 
     public override void FromTreeAttributes(ITreeAttribute tree, IWorldAccessor worldAccessForResolve)
     {
-        base.FromTreeAttributes(tree, worldAccessForResolve);
         mutation = tree.GetDouble("mutation");
-    }
 
-    #region ICodePatch
-    public static void ApplyPatch(ICoreAPI api)
-    {
-        foreach (var block in api.World.Blocks)
+        Genes = new SyncedTreeAttribute();
+
+        var genes = tree.GetTreeAttribute(AttributeName);
+        if (null == genes)
         {
-            if (block == null || block.Code == null || block.Class == null)
-            {
-                continue;
-            }
-            if (block is BlockFarmland)
-            {
-                block.BlockEntityBehaviors = block.BlockEntityBehaviors.Append(new BlockEntityBehaviorType()
-                {
-                    Name = "BEBehaviorFarmlandGeneticData",
-                    properties = null
-                });
-            }
+            return;
         }
+
+        Genes.MergeTree(genes);
     }
 
     public static void RegisterPatch(ICoreAPI api)
     {
         api.RegisterBlockEntityBehaviorClass("BEBehaviorFarmlandGeneticData", typeof(BEBehaviorFarmlandGeneticData));
     }
-    #endregion
+
+    internal void Mutate()
+    {
+        // for each gene
+
+        foreach (var kvmap in Genes)
+        {
+            TreeAttribute attribute = (TreeAttribute)kvmap.Value.GetValue();
+            if (null == attribute)
+            {
+                // BUG(chris): this is an error state
+                continue;
+            }
+
+            // just in case we're dealing with a default
+            // while "default" and "value" existence should be a disjunction, I don't trust
+            DoubleAttribute val = (DoubleAttribute)attribute.GetAttribute("default");
+
+            //   if "default" key exists, delete it
+            attribute.RemoveAttribute("default");
+            //   if "value" key exists, store it locally
+            // grab value if exists
+            if (attribute.HasAttribute("value"))
+            {
+                val = (DoubleAttribute)attribute.GetAttribute("value");
+            }
+            //   set "value" key to local copy + mutation value
+            // BP: check to see if attribute["value"] changes or needs to be done manually
+            val.value = val.value + DblMutation();
+
+            attribute.SetAttribute("value", val);
+        }
+        return;
+    }
+
+    private static double DblMutation()
+    {
+        return (random.NextDouble() - 0.5d) / 8.0d;
+    }
 }

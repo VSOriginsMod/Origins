@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.Datastructures;
 using Vintagestory.API.Server;
 using Vintagestory.API.Util;
 using Vintagestory.GameContent;
@@ -135,17 +136,35 @@ internal class Player
             return;
         }
 
-        BEBehaviorFarmlandGeneticData befarmland = player.CurrentBlockSelection.Block.GetBEBehavior<BEBehaviorFarmlandGeneticData>(player.CurrentBlockSelection.Position);
+        BEBehaviorFarmlandGeneticData bebfarmland = player.CurrentBlockSelection.Block
+            .GetBEBehavior<BEBehaviorFarmlandGeneticData>(player.CurrentBlockSelection.Position);
 
-        if (!((BlockEntityFarmland)befarmland.Blockentity).CanPlant())
+        if (false == ((BlockEntityFarmland)bebfarmland.Blockentity).CanPlant())
         {
             return;
         }
 
-        befarmland.Mutation = activeStack.Attributes.GetDouble(attr_list[0]);
+        // NOTE(chris): set genetic data in farmland blockentity
+        bebfarmland.Mutation = activeStack.Attributes.GetDouble(attr_list[0]);
         OriginsLogger.Debug(player.Entity.Api,
             "[Player::CheckSeedPlanting] Successfully saved genetic data: {0}",
-            player.CurrentBlockSelection.Block.GetBEBehavior<BEBehaviorFarmlandGeneticData>(player.CurrentBlockSelection.Position).Mutation
+            bebfarmland.Mutation
         );
+
+        if (activeStack.Attributes.GetTreeAttribute("genes") is TreeAttribute tree)
+        // instance values
+        {
+            bebfarmland.Genes ??= new SyncedTreeAttribute();
+            bebfarmland.Genes.MergeTree(tree);
+        }
+        // default values
+        else if (activeStack.ItemAttributes.ToAttribute() is TreeAttribute defaults)
+        {
+            bebfarmland.Genes ??= new SyncedTreeAttribute();
+            bebfarmland.Genes
+                .MergeTree(
+                    defaults.GetTreeAttribute("genes")
+                );
+        }
     }
 }

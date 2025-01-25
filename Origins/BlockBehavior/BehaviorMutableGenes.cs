@@ -1,5 +1,6 @@
 ﻿using Origins.Util;
 using System;
+using System.Linq;
 using System.Text;
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
@@ -16,16 +17,19 @@ namespace Origins.GameContent;
 ///   BlockEntity and slightly mutate that data for propogation when the block
 ///   is harvasted.
 /// </summary>
-internal class BlockBehaviorMutableGenes : BlockBehavior, IPatch
+public class BlockBehaviorMutableGenes : BlockBehavior, IPatch
 {
     static readonly string AttributeName = "genes";
     static readonly Random random = new Random();
 
     /// <summary>
-    /// elements hold gene name as first key and default value as first key's value
+    /// Keys hold gene names that map to Values of TreeAttribute with "default"
+    /// keys containing default values.
     /// </summary>
     // NOTE(chris): this may be redunant, I just want to make sure default values exist
-    private TreeAttribute[] genes;
+    private TreeAttribute genes;
+
+    public TreeAttribute Genes { get => genes; set => genes = value; }
 
     public BlockBehaviorMutableGenes(Block block) : base(block)
     {
@@ -45,17 +49,16 @@ internal class BlockBehaviorMutableGenes : BlockBehavior, IPatch
         base.Initialize(properties);
 
         var genes = properties[AttributeName].ToAttribute();
-
-        if (!genes.GetType().IsEquivalentTo(typeof(TreeArrayAttribute)))
+        if (!genes.GetType().IsEquivalentTo(typeof(TreeAttribute)))
         {
             throw new ContextMarshalException(
-                "Unable to parse TreeArrayAttribute from 'properties.genes'; 'genes' must be an array!",
+                "Unable to parse TreeAttribute from 'properties.genes'; 'genes' must be an object!",
                 new FormatException(propertiesAtString)
             );
         }
 
         block.Attributes.Token[AttributeName] = properties.Token[AttributeName];
-        this.genes = (TreeAttribute[])genes.GetValue();
+        this.genes = (TreeAttribute)genes.GetValue();
     }
 
     // NOTE(chris): This does NOT run when using seeds
@@ -69,15 +72,22 @@ internal class BlockBehaviorMutableGenes : BlockBehavior, IPatch
     // NOTE(chris): This _does_ run when using seeds
     public override void OnBlockPlaced(IWorldAccessor world, BlockPos blockPos, ref EnumHandling handling)
     {
-        double attr = world.BlockAccessor
-            .GetBlock(blockPos.DownCopy())?
-            .GetBEBehavior<BEBehaviorFarmlandGeneticData>(blockPos.DownCopy())?
-            .Mutation ?? -100;
+        BEBehaviorFarmlandGeneticData bebfarmland = world.BlockAccessor
+            .GetBlockEntity<BlockEntityFarmland>(blockPos.DownCopy())?
+            .GetBehavior<BEBehaviorFarmlandGeneticData>();
 
+        if (null == bebfarmland)
+        {
+            return;
+        }
+
+        double mut = bebfarmland.Mutation;
         OriginsLogger.Debug(world.Api, "[BlockBehaviorMutableGenes::OnBlockPlaced] {0} block placed at {1} with attribute {2}",
-            block.Code, blockPos.ToString(), attr
+            block.Code, blockPos.ToString(), mut
         );
-        base.OnBlockPlaced(world, blockPos, ref handling);
+
+        // TODO(chris): set genetic data
+        // needs to be done once we know what crop is planted
     }
 
     /// <summary>
@@ -89,24 +99,44 @@ internal class BlockBehaviorMutableGenes : BlockBehavior, IPatch
     /// <param name="handling"></param>
     public override void OnBlockBroken(IWorldAccessor world, BlockPos pos, IPlayer byPlayer, ref EnumHandling handling)
     {
+        if (null == genes)
+        {
+            return;
+        }
+
         BlockEntityFarmland farmland = world.Api.World.BlockAccessor.GetBlockEntity<BlockEntityFarmland>(pos.DownCopy());
         if (farmland == null)
         {
             return;
         }
 
-        double geneticData = farmland.GetBehavior<BEBehaviorFarmlandGeneticData>().Mutation;
+        BEBehaviorFarmlandGeneticData bebfarmland = farmland.GetBehavior<BEBehaviorFarmlandGeneticData>();
+        double mut = bebfarmland.Mutation;
 
-        foreach (BlockDropItemStack stack in block.Drops)
+        if (0 == bebfarmland.Genes.ToArray().Length)
         {
-            var resolvedStack = stack.ResolvedItemstack;
-            if (null != resolvedStack.ItemAttributes && resolvedStack.ItemAttributes.KeyExists(AttributeName))
-            {
-                resolvedStack.Attributes.SetDouble("mutation", geneticData + Mutation());
-            }
+            bebfarmland.Genes.MergeTree(genes);
         }
 
-        farmland.GetBehavior<BEBehaviorFarmlandGeneticData>().Mutation = 0;
+        foreach (BlockDropItemStack stack in block.Drops
+        .Where(
+            s => null != s.ResolvedItemstack.ItemAttributes &&
+            s.ResolvedItemstack.ItemAttributes.KeyExists(AttributeName)
+            )
+        )
+        {
+            stack.ResolvedItemstack.Attributes
+                .SetDouble("mutation", mut + Mutation());
+
+            bebfarmland.Mutate();
+
+            stack.ResolvedItemstack.Attributes
+                .GetOrAddTreeAttribute(AttributeName)
+                .MergeTree(bebfarmland.Genes);
+        }
+
+        bebfarmland.Mutation = 0;
+        bebfarmland.Genes.MergeTree(genes);
 
         base.OnBlockBroken(world, pos, byPlayer, ref handling);
     }
@@ -120,13 +150,13 @@ internal class BlockBehaviorMutableGenes : BlockBehavior, IPatch
             return;
         }
 
-        foreach (var attr in genes)
+        foreach (var key in genes.Keys)
         {
             dsc.AppendLine(
                 string.Format(
                     "{0}: {1}",
-                    attr.Keys[0],
-                    inSlot.Itemstack.Attributes.GetDouble(attr.Keys[0])
+                    key,
+                    inSlot.Itemstack.Attributes.GetTreeAttribute(AttributeName)?.GetDouble(key) ?? -128.0d
                 )
             );
         }
